@@ -1,0 +1,95 @@
+{
+  "name": "Summarize",
+  "namespace": "Stanford\\summarize",
+  "description": "This is a utility EM to make summaries of data within a project. This EM is based off the summarize plugin.",
+  "authors": [
+    {
+      "name": "Andy Martin",
+      "email": "andy123@stanford.edu",
+      "institution": "Stanford University"
+    },
+    {
+      "name": "Lee Ann Yasukawa",
+      "email": "yasukawa@stanford.edu",
+      "institution": "Stanford University"
+    }
+  ],
+
+  "permissions": [
+    "redcap_module_save_configuration"
+  ],
+
+  "links": {
+    "control-center": [
+      {
+        "name": "Summarize Instructions",
+        "icon": "gear",
+        "url": "instructions.php"
+      }
+    ],
+    "project": [
+    ]
+  },
+
+  "no-auth-pages": [
+  ],
+  "crons": [
+  ],
+
+  "system-settings": [
+    {
+      "key": "log_path",
+      "name": "<b>Full server path to log file</b>",
+      "required": false,
+      "type": "text"
+    }
+  ],
+
+  "project-settings": [
+    {
+      "key": "config",
+      "name": "<b>Summarize Setup</b>",
+      "required": true,
+      "type": "sub_settings",
+      "repeatable": true,
+      "sub_settings": [
+        {
+          "key": "title",
+          "name": "<b>Header for top of summarize block</b>",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "include_forms",
+          "name": "<b>List of forms to include</b>",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "include_fields",
+          "name": "<b>List of fields to include</b>",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "exclude_fields",
+          "name": "<b>List of fields to exclude (used with forms)</b>",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "event_id",
+          "name": "<b>Event id where the data is located</b>",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "key": "destination_field",
+          "name": "<b>Field where the summarized data will be displayed</b>",
+          "required": true,
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
