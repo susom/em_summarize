@@ -27,6 +27,7 @@ class summarize extends \ExternalModules\AbstractExternalModule
         $ddFieldsWithFormsNames = getDDFieldsAndForms($proj);
 
         $allConfigErrors = "";
+
         // Loop over each configuration to see if it valid
         for ($ncnt=0; $ncnt < count($settings["informs"]); $ncnt++) {
 
@@ -71,11 +72,13 @@ class summarize extends \ExternalModules\AbstractExternalModule
                 $configErrors .= "</div><br>";
              }
 
+            // These are the errors that I want to display when the configurations are not validgit status
             if (!empty($configErrors)) {
                 $module->emLog("This is the error message: " . $configErrors);
                 // Look for class modal-body and add a <div> before the table to display errors
                 $allConfigErrors .= $configErrors;
             } else {
+                // These are configuations that are valid.  For now, go create the table so I can see what it looks like.
                 // Just using this to test
                 $this->redcap_save_data($project_id, 1, null, $eventId, null, null, null, 1);
             }
@@ -111,7 +114,6 @@ class summarize extends \ExternalModules\AbstractExternalModule
             // If we are not saving this event, no need to update
             if ($event_id == $eventId) {
 
-                $module->emLog("Destination Field 2: " . json_encode($destinationField));
                 // Add all the fields in the included forms
                 $totalFields = array();
                 foreach ($inForms as $form => $formname) {
@@ -133,9 +135,14 @@ class summarize extends \ExternalModules\AbstractExternalModule
                     null, null, null, null, null, TRUE);
 
                 $displayData = getSummarizeData($totalFields, $data[$record], $eventId, $proj, $repeat_instance);
-                $html = createSummarizeBlock($displayData);
+                $html = createSummarizeBlock($displayData, $title);
 
-                $saveData = array($proj->table_pk => $record, $destinationField => $html);
+                // Save this summarize field
+                if ($displayData["repeat"]) {
+                    $saveData[$record]['repeat_instances'][$eventId][""][$repeat_instance] = array($destinationField[0] => $html);
+                } else {
+                    $saveData[$record][$eventId] = array($destinationField[0] => $html);
+                }
                 $module->emLog("Data to save: " . json_encode($saveData));
                 $return = REDCap::saveData('array', $saveData, 'overwrite');
                 $module->emLog("return from save: " . json_encode($return));

@@ -55,7 +55,7 @@
       "sub_settings": [
         {
           "key": "title",
-          "name": "<b>Header for top of summarize block</b>",
+          "name": "<b>Title for top of summarize block</b>",
           "required": false,
           "type": "text"
         },

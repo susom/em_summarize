@@ -68,13 +68,15 @@ function parseConfigList($list) {
 }
 
 function checkSummarizeField($proj, $descriptiveField) {
+    global $module;
 
     $errorMsg = "";
     $fieldType = $proj->metadata[$descriptiveField]["element_type"];
+    $module->emLog("Field $descriptiveField is of type $fieldType");
     if ($fieldType == "") {
         $errorMsg = "Cannot find the Summarize Field [$descriptiveField] on a form.";
-    } else if ($fieldType !== 'descriptive') {
-        $errorMsg = "The Summarize Field [$descriptiveField] must be a 'Descriptive Text' field type";
+    } else if (($fieldType !== 'textarea') and ($fieldType !== 'text')) {
+        $errorMsg = "The Summarize Field [$descriptiveField] must be a 'Text Box' or 'Notes Box' field type";
     }
     return $errorMsg;
 }
@@ -230,9 +232,12 @@ function getSummarizeData($totalFields, $data, $eventId, $proj, $instanceId) {
 
     global $module;
 
+    // Retrieve we want from the return data from REDCap.  We are adding a repeat entry if this
+    // data is from a repeating form/event so we know how to send back the data to REDCap.
     $fields = array();
     foreach($data as $eventID => $eventInfo) {
         if ($eventID == "repeat_instances") {
+            $fields["repeat"] = true;
             foreach ($eventInfo[$eventId] as $formName => $formData) {
                 foreach ($formData[$instanceId] as $fieldname => $fieldValue) {
                     $thisField = $proj->metadata[$fieldname];
@@ -243,6 +248,7 @@ function getSummarizeData($totalFields, $data, $eventId, $proj, $instanceId) {
                 }
              }
         } else {
+            $fields["repeat"] = false;
             foreach($totalFields as $fieldkey => $fieldname) {
                 $thisField = $proj->metadata[$fieldname];
                 $eachField = array();
@@ -256,15 +262,18 @@ function getSummarizeData($totalFields, $data, $eventId, $proj, $instanceId) {
     return $fields;
 }
 
-function createSummarizeBlock($totalFields) {
+function createSummarizeBlock($totalFields, $title) {
 
-    $html = "<div style='background-color: #fefefe; padding:5px;'><table style='border: 1px solid #fefefe; border-spacing: 0px;width:100%; ' >";
+    $html = "<div style='background-color: #fefefe; padding:5px;'><table style='border: 1px solid #fefefe; border-spacing:0px;width:100%;'>";
+    if (!empty($title)) {
+        $html .= "<caption>$title</caption>";
+    }
     $odd = false;
     foreach ($totalFields as $fieldName => $fieldValue) {
         $label = $fieldValue["fieldLabel"];
         $value = $fieldValue["value"];
         $len = strlen($fieldValue);
-        $text = str_replace("\n","<br/>",$value);
+        $text = str_replace("\n","<br>",$value);
         $color = ($odd ? '#fefefe' : '#fafafa');
         if ($len < 80) {
             $html .= "<tr style='background: $color;'><td style='padding: 5px;' valign='top'>{$label}</td><td style='font-weight:normal;'>{$text}</td></tr>";
