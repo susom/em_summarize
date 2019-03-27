@@ -5,53 +5,11 @@
  * Date: 2019-03-20
  * Time: 10:43
  */
-namespace Stanford\summarize;
-/** @var \Stanford\summarize\summarize $module */
+namespace Stanford\Summarize;
+/** @var \Stanford\Summarize\Summarize $module */
 
 use \Project;
 use \Exception;
-
-function getConfigSettings() {
-
-    global $module;
-
-    $includeForms       = $module->getProjectSetting("include_forms");
-    $includeFields      = $module->getProjectSetting("include_fields");
-    $excludeFields      = $module->getProjectSetting("exclude_fields");
-    $eventid            = $module->getProjectSetting("event_id");
-    $destinationfield   = $module->getProjectSetting("destination_field");
-    $title              = $module->getProjectSetting("title");
-
-    for ($ncnt=0; $ncnt < count($includeForms); $ncnt++) {
-        $includeFormsArray[] = parseConfigList($includeForms[$ncnt]);
-        $includeFieldsArray[] = parseConfigList($includeFields[$ncnt]);
-        $excludeFieldsArray[] = parseConfigList($excludeFields[$ncnt]);
-        $eventId[] = parseConfigList($eventid[$ncnt])[0];
-        $destinationField[] = parseConfigList($destinationfield[$ncnt]);
-        $summarizeTitle[] = $title[$ncnt];
-    }
-
-    return array("informs"=>$includeFormsArray, "infields"=>$includeFieldsArray, "exfields" => $excludeFieldsArray,
-                 "eventId"=>$eventId, "destField"=>$destinationField, "title"=>$summarizeTitle);
-
-}
-
-function getDataDictionary($project_id) {
-
-    // Retrieve the Project data dictionary
-    if (empty($project_id)) {
-
-    } else {
-        try {
-            $proj = new Project($project_id);
-            $proj->setRepeatingFormsEvents();
-        } catch (Exception $ex) {
-
-        }
-    }
-
-    return $proj;
-}
 
 function parseConfigList($list) {
     global $module;

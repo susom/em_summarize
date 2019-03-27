@@ -1,6 +1,6 @@
 {
   "name": "Summarize",
-  "namespace": "Stanford\\summarize",
+  "namespace": "Stanford\\Summarize",
   "description": "This is a utility EM to make summaries of data within a project. This EM is based off the summarize plugin.",
   "authors": [
     {
@@ -38,24 +38,43 @@
 
   "system-settings": [
     {
-      "key": "log_path",
-      "name": "<b>Full server path to log file</b>",
+      "key": "enable-system-debug-logging",
+      "name": "<b>Enable Debug Logging (system-wide)</b><i>(Requires emLogger)</i>",
       "required": false,
-      "type": "text"
+      "type": "checkbox"
     }
+
   ],
 
   "project-settings": [
     {
-      "key": "config",
-      "name": "<b>Summarize Setup</b>",
+      "key": "singleton",
+      "name": "<b>TEST Singleton</b>",
+      "required": false,
+      "type": "text"
+    },
+    {
+      "key": "instance",
+      "name": "<b>Configure Summarize Instance</b>",
       "required": true,
       "type": "sub_settings",
       "repeatable": true,
       "sub_settings": [
         {
+          "key": "event_id",
+          "name": "<b>Event id where the data is located</b>",
+          "required": true,
+          "type": "event-list"
+        },
+        {
+          "key": "destination_field",
+          "name": "<b>Field where the summarized data will be displayed</b>",
+          "required": true,
+          "type": "field-list"
+        },
+        {
           "key": "title",
-          "name": "<b>Title for top of summarize block</b>",
+          "name": "<b>Title for summarize block</b><br>Alternately you can add a title before you pipe in the result",
           "required": false,
           "type": "text"
         },
@@ -67,7 +86,7 @@
         },
         {
           "key": "include_fields",
-          "name": "<b>List of fields to include</b>",
+          "name": "<b>List of individual fields to include</b>",
           "required": false,
           "type": "text"
         },
@@ -76,20 +95,17 @@
           "name": "<b>List of fields to exclude (used with forms)</b>",
           "required": false,
           "type": "text"
-        },
-        {
-          "key": "event_id",
-          "name": "<b>Event id where the data is located</b>",
-          "required": true,
-          "type": "text"
-        },
-        {
-          "key": "destination_field",
-          "name": "<b>Field where the summarized data will be displayed</b>",
-          "required": true,
-          "type": "text"
         }
       ]
+    },
+    {
+      "key": "enable-project-debug-logging",
+      "name": "<b>Enable Debug Logging</b> <i>(Requires emLogger)</i>",
+      "required": false,
+      "type": "checkbox",
+      "source": "js/config.js",
+      "functionName": "SummarizeConfig.config"
     }
+
   ]
 }
