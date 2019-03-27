@@ -62,7 +62,7 @@
       "sub_settings": [
         {
           "key": "event_id",
-          "name": "<b>Event id where the data is located</b>",
+          "name": "<b>Event id where the data is located</b><br/>Must include both source and destination fields",
           "required": true,
           "type": "event-list"
         },
@@ -74,25 +74,25 @@
         },
         {
           "key": "title",
-          "name": "<b>Title for summarize block</b><br>Alternately you can add a title before you pipe in the result",
+          "name": "<b>Title for summarize block</b><br/>Alternately you can add a title before you pipe in the result",
           "required": false,
           "type": "text"
         },
         {
           "key": "include_forms",
-          "name": "<b>List of forms to include</b>",
+          "name": "<b>List of forms to include</b><br/>A commas-separated list of form names",
           "required": false,
           "type": "text"
         },
         {
           "key": "include_fields",
-          "name": "<b>List of individual fields to include</b>",
+          "name": "<b>List of individual fields to include</b><br/>A comma-separated list of fields (in addition to above forms)",
           "required": false,
           "type": "text"
         },
         {
           "key": "exclude_fields",
-          "name": "<b>List of fields to exclude (used with forms)</b>",
+          "name": "<b>List of fields to exclude (used with forms)</b><br/>A comma-separated list of fields to exclude",
           "required": false,
           "type": "text"
         }

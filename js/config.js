@@ -56,11 +56,15 @@ SummarizeConfig.config = function() {
 
     // this.log("starting with this: ", this);
 
-    $(configureModal).on('change', 'input', SummarizeConfig.getStatus);
+    $(configureModal).on('change', 'input, select, textarea', SummarizeConfig.getStatus);
+
+
+    // Let's call getStatus once to start us off:
+    setTimeout(SummarizeConfig.getStatus, 300);
 };
 
 
-// Do an action
+// Do an action -- NOT USED
 SummarizeConfig.doAction = function (e) {
 
     const data = $(e).data();
@@ -138,6 +142,10 @@ SummarizeConfig.doAction = function (e) {
     //}
 
 };
+
+
+
+
 
 
 // Get all the fields from the config form
