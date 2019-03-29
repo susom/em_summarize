@@ -7,16 +7,12 @@
       "name": "Andy Martin",
       "email": "andy123@stanford.edu",
       "institution": "Stanford University"
-    },
-    {
-      "name": "Lee Ann Yasukawa",
-      "email": "yasukawa@stanford.edu",
-      "institution": "Stanford University"
     }
   ],
 
   "permissions": [
-    "redcap_module_save_configuration"
+    "redcap_module_save_configuration",
+    "redcap_save_record"
   ],
 
   "links": {
@@ -68,7 +64,7 @@
         },
         {
           "key": "destination_field",
-          "name": "<b>Field where the summarized data will be displayed</b>",
+          "name": "<b>Field where the summarized data will be stored</b> (either 'text' or 'textarea' field)<br>NOTE: You will also need a field to display the piped results.",
           "required": true,
           "type": "field-list"
         },

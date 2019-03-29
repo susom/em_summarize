@@ -1,7 +1,7 @@
 <?php
 namespace Stanford\Summarize;
 
-
+use \REDCap;
 
 class SummarizeInstance
 {
@@ -88,7 +88,7 @@ class SummarizeInstance
         if (!in_array($form, $all_forms)) $all_forms[] = $form;
 
         // Remove destination field if included in the source forms/fields
-        if (in_array($this->destination_field, all_fields)) unset($all_fields[$this->destination_field]);
+        if (in_array($this->destination_field, array_keys($all_fields))) unset($all_fields[$this->destination_field]);
 
         $this->all_fields = $all_fields;
         $this->all_forms = $all_forms;
@@ -98,6 +98,12 @@ class SummarizeInstance
 
 
     public function validateConfig() {
+
+        // Make sure there is an event selected
+        if (!isset($this->event_id)) {
+            $this->errors[] = "Event ID is required";
+        }
+
         // Ensure forms exist in project
         foreach ($this->include_forms as $form_name) {
             // A key value array of fields name and field label
@@ -106,7 +112,7 @@ class SummarizeInstance
             }
         }
 
-        // Ensure field exist in project
+        // Ensure include fields exist in project
         foreach ($this->include_fields as $field_name) {
             // A key value array of fields name and field label
             if (!isset($this->Proj->metadata[$field_name])) {
@@ -114,7 +120,7 @@ class SummarizeInstance
             }
         }
 
-        // Ensure field exist in project
+        // Ensure exclude fields exist in project
         foreach ($this->exclude_fields as $field_name) {
             // A key value array of fields name and field label
             if (!isset($this->Proj->metadata[$field_name])) {
@@ -123,8 +129,9 @@ class SummarizeInstance
         }
 
         // Ensure destination field exists
-        if (!isset($this->Proj->metadata[$this->destination_field]))
-        {
+        if (empty($this->Proj->metadata[$this->destination_field])) {
+            $this->errors[] = "Destination field is required";
+        } else if (!isset($this->Proj->metadata[$this->destination_field])) {
             $this->errors[] = "Destination field $this->destination_field is not found in project";
         } else {
             // Verify it is a text/text-area field
@@ -134,16 +141,17 @@ class SummarizeInstance
         }
 
         // Ensure forms exist in event
-        foreach ($this->all_forms as $form_name) {
-            // A key value array of fields name and field label
-            if (!in_array($form_name, $this->Proj->eventsForms[$this->event_id])) {
-                $event_name = $this->Proj->eventInfo[$this->event_id]['name'];
-                $this->errors[] = "Form $form_name is not found/enabled in $event_name";
+        if (!empty($this->event_id)) {
+            foreach ($this->all_forms as $form_name) {
+                // A key value array of fields name and field label
+                if (!in_array($form_name, $this->Proj->eventsForms[$this->event_id])) {
+                    $event_name = $this->Proj->eventInfo[$this->event_id]['name'];
+                    $this->errors[] = "Form $form_name is not found/enabled in $event_name";
+                }
             }
         }
 
         // Only one form if any form is a repeating form
-
         $repeating_forms_events = $this->Proj->getRepeatingFormsEvents($this->event_id);
         if (!empty($repeating_forms_events) && $repeating_forms_events != "WHOLE") {
             $array_intersection = array_intersect($this->all_forms, $repeating_forms_events);
@@ -152,88 +160,161 @@ class SummarizeInstance
             }
         }
 
-
-
-
-
-
-        // // Retrieve fields that are in each form
-        // $ddFieldsWithFormsNames = getDDFieldsAndForms($proj);
-        //
-        // $allConfigErrors = "";
-        //
-        // // Loop over each configuration to see if it valid
-        // for ($ncnt=0; $ncnt < count($settings["informs"]); $ncnt++) {
-        //
-        //     $configErrors = "";
-        //     $inForms = $settings["informs"][$ncnt];
-        //     $destinationField = $settings["destField"][$ncnt];
-        //     $inFields = $settings["infields"][$ncnt];
-        //     //$exFields = $settings["exfields"][$ncnt];
-        //     $eventId = $settings["eventId"][$ncnt];
-        //
-        //     // Check the destination field and make sure we can find it
-        //     $destError = checkSummarizeField($proj, $destinationField[0]);
-        //
-        //     // Add all individual fields together
-        //     $allIndividualFields = array_merge($destinationField, $inFields);
-        //
-        //     // If individual fields are included, retrieve the forms they belong to
-        //     $fieldsForms = getFormsFromFields($ddFieldsWithFormsNames, $allIndividualFields);
-        //     $fieldsErrors = $fieldsForms["errorMsg"];
-        //
-        //     // Merge all the forms together
-        //     $formsTotal = array_unique(array_merge($inForms, $fieldsForms["formList"]));
-        //
-        //     // We now have all the forms where are fields are located
-        //     // Now check events. There are 3 scenarios:
-        //     // 1) If this is a repeating event, make sure all the forms are in the same event
-        //     // 2) If this is a repeating form, make sure all fields are only on that one form
-        //     // 3) If none of the forms are repeating (forms or events), make sure all the fields as
-        //     //      well as the destination field is in the same event
-        //     $eventErrors = checkFormsInEvents($proj, $formsTotal, $eventId);
-        //     if (!empty($eventErrors) or (!empty($fieldsErrors)) or (!empty($destError))) {
-        //         $configErrors = "<div><p>For summarize destination field $destinationField[0]:</p>";
-        //         if (!empty($destError)) {
-        //             $configErrors .= "<p>   $destError</p>";
-        //         }
-        //         if (!empty($fieldsErrors)) {
-        //             $configErrors .= "<p>   $fieldsErrors</p>";
-        //         }
-        //         if (!empty($eventErrors)) {
-        //             $configErrors .= "<p>   $eventErrors</p>";
-        //         }
-        //         $configErrors .= "</div><br>";
-        //      }
-        //
-        //     // These are the errors that I want to display when the configurations are not validgit status
-        //     if (!empty($configErrors)) {
-        //         $module->emLog("This is the error message: " . $configErrors);
-        //         // Look for class modal-body and add a <div> before the table to display errors
-        //         $allConfigErrors .= $configErrors;
-        //     } else {
-        //         // These are configuations that are valid.  For now, go create the table so I can see what it looks like.
-        //         // Just using this to test
-        //         $this->redcap_save_data($project_id, 1, null, $eventId, null, null, null, 1);
-        //     }
-        // }
-
-
-
-
-
-
         // Validate that all is right with this config
         $result = empty($this->errors);
 
         return $result;
     }
 
+    public function saveSummarizeBlock($record, $repeat_instance)
+    {
+        $saved = true;
+        // Retrieve the data
+        $data = REDCap::getData('array', $record, array_keys($this->all_fields), $this->event_id,
+            null, null, null, null, null, TRUE);
+
+        $displayData = $this->retrieveSummarizeData($data[$record], $repeat_instance);
+        $html = $this->createSummarizeBlock($displayData);
+
+        // Save this summarize field
+        if ($displayData["repeat"]) {
+            if (count($this->include_forms) == 1) {
+                $saveData[$record]['repeat_instances'][$this->event_id][$this->include_forms[0]][$repeat_instance] = array($this->destination_field => $html);
+            } else {
+                $saveData[$record]['repeat_instances'][$this->event_id][""][$repeat_instance] = array($this->destination_field => $html);
+            }
+        } else {
+            $saveData[$record][$this->event_id] = array($this->destination_field => $html);
+        }
+
+        $return = REDCap::saveData('array', $saveData, 'overwrite');
+        if (!empty($return["errors"])) {
+            $saved = false;
+            $this->errors = "Error saving summarize block: " . $return["errors"];
+        }
+
+        return $saved;
+    }
+
+    private function retrieveSummarizeData($data, $repeat_instance) {
+
+        // Retrieve the data we want from the return REDCap data.  We are adding a repeat entry if this
+        // data is from a repeating form/event so we know how to send back the data to REDCap.
+        $fields = array();
+        foreach($data as $eventID => $eventInfo) {
+            if ($eventID == "repeat_instances") {
+                $fields["repeat"] = true;
+                foreach ($eventInfo[$this->event_id] as $formName => $formData) {
+                    foreach ($formData[$repeat_instance] as $fieldname => $fieldValue) {
+                        if (isset($fieldValue) && ($fieldValue !== '')) {
+                            $thisField = $this->Proj->metadata[$fieldname];
+                            $eachField = array();
+                            $eachField["fieldLabel"] = $thisField["element_label"];
+                            $eachField["value"] = $this->getLabel($thisField, $fieldname, $fieldValue);
+                            if (!empty($eachField["value"])) {
+                                $fields[$fieldname] = $eachField;
+                            }
+                        }
+                    }
+                }
+            } else {
+                $fields["repeat"] = false;
+                foreach(array_keys($this->all_fields) as $fieldkey => $fieldname) {
+                    $thisField = $this->Proj->metadata[$fieldname];
+                    $eachField = array();
+                    $eachField["fieldLabel"] = $thisField["element_label"];
+                    $eachField["value"] = $this->getLabel($thisField, $fieldname, $eventInfo[$fieldname]);
+                    if (!empty($eachField["value"])) {
+                        $fields[$fieldname] = $eachField;
+                    }
+                }
+            }
+        }
+
+        return $fields;
+    }
+
+    private function createSummarizeBlock($display_data) {
+
+        $html = "<div style='background-color: #fefefe; padding:5px;'>";
+        if (!empty($this->title)) {
+            $html .= "<h6 style='text-align:center'><b>$this->title</b></h6>";
+        }
+        $html .= "<table style='border: 1px solid #fefefe; border-spacing:0px;width:100%;'>";
+
+        $odd = false;
+        foreach ($display_data as $fieldName => $fieldValue) {
+            $label = $fieldValue["fieldLabel"];
+            $value = $fieldValue["value"];
+            $len = strlen($fieldValue);
+            $text = str_replace("\n","<br>",$value);
+            $color = ($odd ? '#fefefe' : '#fafafa');
+            if ($len < 80) {
+                $html .= "<tr style='background: $color;'><td style='padding: 5px;' valign='top'>{$label}</td><td style='font-weight:normal;'>{$text}</td></tr>";
+            } else {
+                $html .= "<tr style='background: $color;'><td style='padding: 5px;' colspan=2>{$label}<div style='font-weight:normal;padding:5px 20px;'>{$text}</div></td></tr>";
+            }
+            $odd = !$odd;
+        }
+        $html .= "</table></div>";
+
+        return $html;
+    }
+
+    private function getLabel($fieldInfo, $field, $value)
+    {
+        global $module;
+
+        if (empty($field)) {
+            $module->emError("The variable list is undefined so cannot retrieve data dictionary options.");
+        }
+
+        $label = null;
+        switch ($fieldInfo["element_type"]) {
+            case "select":
+            case "radio":
+            case "yesno":
+            case "truefalse":
+
+                $optionList = $fieldInfo["element_enum"];
+                $options = explode('\n', $optionList);
+                foreach ($options as $optionKey => $optionValue) {
+
+                    $option = explode(',', $optionValue, 2);
+                    if (trim($option[0]) == $value) {
+                        if (empty($label)) {
+                            $label = trim($option[1]);
+                        } else {
+                            $label .= ', ' . trim($option[1]);
+                        }
+                    }
+                }
+
+                break;
+            case "checkbox":
+
+                $optionList = $fieldInfo["element_enum"];
+                $options = explode('\n', $optionList);
+                foreach ($options as $optionKey => $optionValue) {
+                    $option = explode(',', $optionValue);
+                    if ($value[trim($option[0])] == 1) {
+                        if (empty($label)) {
+                            $label = trim($option[1]);
+                        } else {
+                            $label .= ', ' . trim($option[1]);
+                        }
+                    }
+                }
+                break;
+            default:
+                $label = $value;
+        }
+
+        return $label;
+    }
 
     public function getErrors() {
         return $this->errors;
     }
-
-
 
 }
