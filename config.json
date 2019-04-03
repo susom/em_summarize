@@ -44,12 +44,6 @@
 
   "project-settings": [
     {
-      "key": "singleton",
-      "name": "<b>TEST Singleton</b>",
-      "required": false,
-      "type": "text"
-    },
-    {
       "key": "instance",
       "name": "<b>Configure Summarize Instance</b>",
       "required": true,
