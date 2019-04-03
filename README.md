@@ -1,6 +1,7 @@
 # Summarize
 
 This external module allows you to summarize forms and fields into a single field...
+The field must be a text or textarea field.  Only fields which have values will be displayed.
 
 
 ## Options
