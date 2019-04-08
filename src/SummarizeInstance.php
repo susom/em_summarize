@@ -14,6 +14,8 @@ class SummarizeInstance
     private $event_id;
     private $destination_field;
     private $title;
+    private $disp_value_under_name;
+    private $remove_form_status;
 
     private $status;
     private $warnings;
@@ -28,12 +30,14 @@ class SummarizeInstance
     {
         $this->module = $module;
 
-        $this->include_forms     = $this->parseConfigList( $instance['include_forms']  );
-        $this->include_fields    = $this->parseConfigList( $instance['include_fields'] );
-        $this->exclude_fields    = $this->parseConfigList( $instance['exclude_fields'] );
-        $this->event_id          = $instance['event_id'];
-        $this->destination_field = $instance['destination_field'];
-        $this->title             = $instance['title'];
+        $this->include_forms            = $this->parseConfigList( $instance['include_forms']  );
+        $this->include_fields           = $this->parseConfigList( $instance['include_fields'] );
+        $this->exclude_fields           = $this->parseConfigList( $instance['exclude_fields'] );
+        $this->event_id                 = $instance['event_id'];
+        $this->destination_field        = $instance['destination_field'];
+        $this->title                    = $instance['title'];
+        $this->disp_value_under_name    = $instance['disp_value_under_name'];
+        $this->remove_form_status       = $instance['remove_form_status'];
 
         global $Proj;
         $this->Proj = $Proj;
@@ -41,7 +45,7 @@ class SummarizeInstance
 
         $this->getAllFields();
 
-        $module->emDebug("Forms", $this->include_forms);
+        $this->module->emDebug("Forms", $this->include_forms);
     }
 
 
@@ -66,6 +70,9 @@ class SummarizeInstance
             // A key value array of fields name and field label
             $form_fields = $this->Proj->forms[$form_name]['fields'];
             $all_fields = array_merge($all_fields, $form_fields);
+            if ($this->remove_form_status) {
+                unset($all_fields[$form_name . "_complete"]);
+            }
             $all_forms[] = $form_name;
         }
 
@@ -249,7 +256,7 @@ class SummarizeInstance
             $len = strlen($fieldValue);
             $text = str_replace("\n","<br>",$value);
             $color = ($odd ? '#fefefe' : '#fafafa');
-            if ($len < 80) {
+            if (!$this->disp_value_under_name) {
                 $html .= "<tr style='background: $color;'><td style='padding: 5px;' valign='top'>{$label}</td><td style='font-weight:normal;'>{$text}</td></tr>";
             } else {
                 $html .= "<tr style='background: $color;'><td style='padding: 5px;' colspan=2>{$label}<div style='font-weight:normal;padding:5px 20px;'>{$text}</div></td></tr>";

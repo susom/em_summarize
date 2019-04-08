@@ -71,25 +71,37 @@
           "key": "title",
           "name": "<b>Title for summarize block</b><br/>Alternately you can add a title before you pipe in the result",
           "required": false,
-          "type": "text"
+          "type": "textarea"
         },
         {
           "key": "include_forms",
           "name": "<b>List of forms to include</b><br/>A commas-separated list of form names",
           "required": false,
-          "type": "text"
+          "type": "textarea"
         },
         {
           "key": "include_fields",
           "name": "<b>List of individual fields to include</b><br/>A comma-separated list of fields (in addition to above forms)",
           "required": false,
-          "type": "text"
+          "type": "textarea"
         },
         {
           "key": "exclude_fields",
           "name": "<b>List of fields to exclude (used with forms)</b><br/>A comma-separated list of fields to exclude",
           "required": false,
-          "type": "text"
+          "type": "textarea"
+        },
+        {
+          "key": "remove_form_status",
+          "name": "<b>When checked, the form completion status will be removed for all forms</b>",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "key": "disp_value_under_name",
+          "name": "<b>When checked, the field value will be displayed in a row under the field name</b>",
+          "required": false,
+          "type": "checkbox"
         }
       ]
     },
