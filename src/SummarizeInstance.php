@@ -3,28 +3,41 @@ namespace Stanford\Summarize;
 
 use \REDCap;
 
+/**
+ * Class SummarizeInstance
+ * @package Stanford\Summarize
+ *
+ * This class validates each summarize configuration entered by users for their project.  Once the entered form/field lists
+ * are validated, it will create the summarize block and save it to the record.
+ *
+ */
 class SummarizeInstance
 {
     /** @var \Stanford\Summarize\Summarize $module */
     private $module;
 
+    // Determines which fields should be included in the summarize block
     private $include_forms;
     private $include_fields;
     private $exclude_fields;
     private $event_id;
     private $destination_field;
-    private $title;
-    private $disp_value_under_name;
     private $remove_form_status;
-
-    private $status;
-    private $warnings;
-    private $errors;                 // Array of errors
-
-
     private $all_fields;
     private $all_forms;
 
+    // Determines the layout of the summarize block
+    private $title;
+    private $disp_value_under_name;
+    private $field_label_width;
+    private $max_chars_per_column;
+    const MIN_LABEL_WIDTH = 10;
+    const MAX_LABEL_WIDTH = 90;
+
+    // Currently only errors is used
+    private $status;
+    private $warnings;
+    private $errors;                 // Array of errors
 
     public function __construct($module, $instance)
     {
@@ -37,6 +50,8 @@ class SummarizeInstance
         $this->destination_field        = $instance['destination_field'];
         $this->title                    = $instance['title'];
         $this->disp_value_under_name    = $instance['disp_value_under_name'];
+        $this->field_label_width        = $instance['field_label_width'];
+        $this->max_chars_per_column     = $instance['max_chars_per_column'];
         $this->remove_form_status       = $instance['remove_form_status'];
 
         global $Proj;
@@ -48,8 +63,12 @@ class SummarizeInstance
         $this->module->emDebug("Forms", $this->include_forms);
     }
 
-
-
+    /**
+     * This function splits the configuration into an array
+     *
+     * @param $list - original list
+     * @return array - split array
+     */
     function parseConfigList($list) {
         $listArray = array();
         $lists = preg_split('/\W/', $list, 0, PREG_SPLIT_NO_EMPTY);
@@ -59,7 +78,11 @@ class SummarizeInstance
         return $listArray;
     }
 
-    // Assume the forms and fields are valid!
+    /**
+     * This function will create a list of all fields included in this Summarize block
+     *
+     * @return array
+     */
     private function getAllFields() {
 
         $all_fields = [];
@@ -103,7 +126,16 @@ class SummarizeInstance
         return $all_fields;
     }
 
-
+    /**
+     * Performs checks on entered configuration to make sure it is valid. Checks include:
+     *  1. Event ID was entered
+     *  2. All forms exist
+     *  3. All fields exist
+     *  4. All forms are in the event selected
+     *  5. If there is a repeating form, all fields are on that form.
+     *
+     * @return bool - true/false if the configuration is valid
+     */
     public function validateConfig() {
 
         // Make sure there is an event selected
@@ -173,6 +205,14 @@ class SummarizeInstance
         return $result;
     }
 
+    /**
+     * This function will retrieve REDCap data, format the data into the Summarize block and save the html back to the
+     * Summarize field.
+     *
+     * @param $record - project record that is being updated
+     * @param $repeat_instance - for repeating forms
+     * @return bool - true/false if Summarize block was successfully saved
+     */
     public function saveSummarizeBlock($record, $repeat_instance)
     {
         $saved = true;
@@ -198,11 +238,19 @@ class SummarizeInstance
         if (!empty($return["errors"])) {
             $saved = false;
             $this->errors = "Error saving summarize block: " . $return["errors"];
+            $this->module->emError($this->errors);
         }
 
         return $saved;
     }
 
+    /**
+     * This function re-formats the data retrieved from REDCap for the Summarize blocks.
+     *
+     * @param $data - Data retrieved from REDCap
+     * @param $repeat_instance - instance of the repeating form
+     * @return array - User friendly array of data
+     */
     private function retrieveSummarizeData($data, $repeat_instance) {
 
         // Retrieve the data we want from the return REDCap data.  We are adding a repeat entry if this
@@ -217,7 +265,7 @@ class SummarizeInstance
                             $thisField = $this->Proj->metadata[$fieldname];
                             $eachField = array();
                             $eachField["fieldLabel"] = $thisField["element_label"];
-                            $eachField["value"] = $this->getLabel($thisField, $fieldname, $fieldValue);
+                            $eachField["value"] = $this->getLabel($thisField, $fieldValue);
                             if (!empty($eachField["value"])) {
                                 $fields[$fieldname] = $eachField;
                             }
@@ -230,7 +278,7 @@ class SummarizeInstance
                     $thisField = $this->Proj->metadata[$fieldname];
                     $eachField = array();
                     $eachField["fieldLabel"] = $thisField["element_label"];
-                    $eachField["value"] = $this->getLabel($thisField, $fieldname, $eventInfo[$fieldname]);
+                    $eachField["value"] = $this->getLabel($thisField, $eventInfo[$fieldname]);
                     if (!empty($eachField["value"])) {
                         $fields[$fieldname] = $eachField;
                     }
@@ -241,25 +289,55 @@ class SummarizeInstance
         return $fields;
     }
 
+    /**
+     * This function takes the retrieved data and creates an html table for this configuration.  Any display
+     * options provided the user needs to be accounted for here
+     *
+     * @param $display_data - Data to display in Summarize block
+     * @return string - Formatted html table
+     */
     private function createSummarizeBlock($display_data) {
+
+        // Check to see how the user wants this displayed
+        if (!$this->disp_value_under_name) {
+            // If the user does not want to display the values on a separate row from
+            // the label, see what the field label width should be.
+            if (empty($this->field_label_width)) {
+                $label_width = 50;
+            } else if ($this->field_label_width < self::MIN_LABEL_WIDTH) {
+                $label_width = self::MIN_LABEL_WIDTH;
+            } else if ($this->field_label_width > self::MAX_LABEL_WIDTH) {
+                $label_width = self::MAX_LABEL_WIDTH;
+            } else {
+                $label_width = $this->field_label_width;
+            }
+            $value_width = 100-$label_width;
+        }
 
         $html = "<div style='background-color: #fefefe; padding:5px;'>";
         if (!empty($this->title)) {
             $html .= "<h6 style='text-align:center'><b>$this->title</b></h6>";
         }
-        $html .= "<table style='border: 1px solid #fefefe; border-spacing:0px;width:100%;'>";
+        $html .= "<table style='border: 1px solid #fefefe; border-spacing:0px; width:100%;'>";
+        if (empty($this->disp_value_under_name)) {
+            $html .= "<tr><th style='width:" . $label_width . "%'></th><th style='width:" . $value_width . "%'></th></tr>";
+        }
 
         $odd = false;
         foreach ($display_data as $fieldName => $fieldValue) {
             $label = $fieldValue["fieldLabel"];
             $value = $fieldValue["value"];
-            $len = strlen($fieldValue);
             $text = str_replace("\n","<br>",$value);
             $color = ($odd ? '#fefefe' : '#fafafa');
-            if (!$this->disp_value_under_name) {
-                $html .= "<tr style='background: $color;'><td style='padding: 5px;' valign='top'>{$label}</td><td style='font-weight:normal;'>{$text}</td></tr>";
+
+            // Decide if this field value should be on a new line. If the length of the field value is longer than
+            // the allowed length set in the configuration, display on a new line.
+            $new_line = (!empty($this->max_chars_per_column) && (strlen($text) > $this->max_chars_per_column) ? true : false);
+
+            if ($this->disp_value_under_name || $new_line) {
+                $html .= "<tr style='background: $color;'><td colspan=2 style='padding:5px; width:100%'>{$label}<div style='font-weight:normal; padding:5px 20px; width=100%;'>{$text}</div></td></tr>";
             } else {
-                $html .= "<tr style='background: $color;'><td style='padding: 5px;' colspan=2>{$label}<div style='font-weight:normal;padding:5px 20px;'>{$text}</div></td></tr>";
+                $html .= "<tr style='background: $color;'><td style='padding:5px;'>{$label}</td><td style='font-weight:normal;'>{$text}</td></tr>";
             }
             $odd = !$odd;
         }
@@ -268,13 +346,16 @@ class SummarizeInstance
         return $html;
     }
 
-    private function getLabel($fieldInfo, $field, $value)
+    /**
+     * This function converts the "raw" value of a field to the field label
+     *
+     * @param $fieldInfo - Data Dictionary for field
+     * @param $value - raw value of field
+     * @return string|null - label corresponding to raw value
+     */
+    private function getLabel($fieldInfo, $value)
     {
         global $module;
-
-        if (empty($field)) {
-            $module->emError("The variable list is undefined so cannot retrieve data dictionary options.");
-        }
 
         $label = null;
         switch ($fieldInfo["element_type"]) {
@@ -320,6 +401,27 @@ class SummarizeInstance
         return $label;
     }
 
+    /**
+     * Allow callers to retrieve the list of fields for this configuration
+     *
+     * @return - array of fields
+     */
+    public function retrieveAllFields() {
+        return $this->all_fields;
+    }
+
+    /**
+     * Allow callers to retrieve the event ID
+     *
+     * @return - event ID
+     */
+    public function retrieveEventID() {
+        return $this->event_id;
+    }
+
+    /**
+     * @return array of strings when the configurations are not valid
+     */
     public function getErrors() {
         return $this->errors;
     }

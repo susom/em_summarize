@@ -22,11 +22,6 @@
 
   "links": {
     "control-center": [
-      {
-        "name": "Summarize Instructions",
-        "icon": "gear",
-        "url": "instructions.php"
-      }
     ],
     "project": [
     ]
@@ -49,6 +44,11 @@
 
   "project-settings": [
     {
+      "key": "description",
+      "name": "<h6 style='text-align:center;color:red'><b>Organize project fields into an easy-to-read table</b></h6>This tool allows users to format data from your project into an easy-to-read table structure. Summarize uses the configuration specified below to determine which fields to include and how to display the data. HTML is generated for each record and each configuration and the html is stored in a project field that is specified in the configuration. The html can then be piped to a descriptive field to be displayed on a project form or can be used to pipe project information into emails or surveys.<br><br>The data that can be used in a Summarize table is confined to project fields in the same event.  If you would like to display project fields across events or fields from another project, please use the Data Table External Module instead.",
+      "type": "descriptive"
+    },
+    {
       "key": "instance",
       "name": "<b>Configure Summarize Instance</b>",
       "required": true,
@@ -63,7 +63,7 @@
         },
         {
           "key": "destination_field",
-          "name": "<b>Field where the summarized data will be stored</b> (either 'text' or 'textarea' field)<br>NOTE: You will also need a field to display the piped results.",
+          "name": "<b>Field where the summarized data will be stored</b> (either <i>'text'</i> or <i>'textarea'</i> field)<br>NOTE: You will also need a field to display the piped results.",
           "required": true,
           "type": "field-list"
         },
@@ -87,27 +87,55 @@
         },
         {
           "key": "exclude_fields",
-          "name": "<b>List of fields to exclude (used with forms)</b><br/>A comma-separated list of fields to exclude",
+          "name": "<b>List of fields to exclude (from the list of forms to include)</b><br/>A comma-separated list of fields to exclude",
           "required": false,
           "type": "textarea"
         },
         {
           "key": "remove_form_status",
-          "name": "<b>When checked, the form completion status will be removed for all forms</b>",
+          "name": "<b>Exclude form completion statuses</b><br>When checked, the form completion statuses will automatically be removed.",
           "required": false,
           "type": "checkbox"
         },
         {
+          "key": "description2",
+          "name": "<h6 style='text-align:center; color:blue'><b>Display options for this configuration</b></h6>The following options are used for the display. They allow users to have some control over the layout of the display table.",
+          "type": "descriptive"
+        },
+        {
           "key": "disp_value_under_name",
-          "name": "<b>When checked, the field value will be displayed in a row under the field name</b>",
+          "name": "<b>Display field values under field names</b><br>When checked, field values will be displayed in a row under the field name. When this checkbox is selected, the next value, Ratio of Field Label Column, is not used",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "key": "field_label_width",
+          "name": "<b>Field label width (left column)</b><br>This value specifies what percentage of the display table is devoted to the field label. The range for this value is 10 (10% of table) to 90 (90% of table). The remainder of the table will be used for the field value. If the entered value is outside of this range, the min or max value will be used. If this field is blank, then 50% will be used. When the field value is displayed below the field label, this value is not used.",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "max_chars_per_column",
+          "name": "<b>Max characters for new row</b><br>This value specifies when the field value will be displayed under the field label. For individual fields, if the length of field value exceeds the number entered here, the field value will be displayed under the field label instead of next to it in a separate column.  For instance, if you have several sentences written in a textarea field, that one field will be displayed under the field label when all the other fields are displayed in a second column. When blank, the field value will wrap in the second column.",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "refresh",
+          "name": "<b>Force Refresh</b><br>When selected, all records using this Summarize configuration will be refreshed.",
           "required": false,
           "type": "checkbox"
         }
       ]
     },
     {
+      "key": "description4",
+      "name": "<h6 style='color:red;'><b>Project Debugging Option</b></h6>This will allow for extra debugging statements to be written to the project log files for the whole project - not just one configuration.",
+      "type": "descriptive"
+    },
+    {
       "key": "enable-project-debug-logging",
-      "name": "<b>Enable Debug Logging</b> <i>(Requires emLogger)</i>",
+      "name": "<b>Enable Debug Logging</b></h6><i> (Requires emLogger)</i><br>Before enabling, please contact the REDCap team for help.",
       "required": false,
       "type": "checkbox",
       "source": "js/config.js",
