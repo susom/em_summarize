@@ -38,8 +38,8 @@ switch ($action) {
         // $module->emDebug("formatted settings: ", $data);
 
         list($result,$message) = $module->validateConfigs( $instances );
-            $module->emDebug($action, $result, $message);
-            break;
+        $module->emDebug($action, $result, $message);
+        break;
 }
 
 header('Content-Type: application/json');

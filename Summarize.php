@@ -6,7 +6,6 @@ require_once("emLoggerTrait.php");
 require_once("src/SummarizeInstance.php");
 
 use \REDCap;
-use \Plugin;
 
 class Summarize extends \ExternalModules\AbstractExternalModule
 {
@@ -14,7 +13,6 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 
     public  $Proj;           // A reference to the main Proj
     private $subSettings;   // An array of subsettings under the instance key
-    private $configSettings;
 
     public function __construct()
     {
@@ -89,7 +87,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
      * @return array - boolean - if any configuration had an error
      *               - string - message of the error
      */
-    public function validateConfigs( $instances ) {
+    public function validateConfigs( $instances, $updateConfigs = false ) {
         $result = true;
         $messages = [];
 
@@ -107,9 +105,10 @@ class Summarize extends \ExternalModules\AbstractExternalModule
                     "<ul><li>" .
                     implode("</li><li>",$sc->getErrors()) .
                     "</li></ul>"; //$messages + $sc->getErrors();
-                $this->emDebug($messages[]);
-            } else if ($instance['refresh']) {
+                $this->emDebug("Invalid configuration message: ", $messages);
+            } else if ($instance['refresh'] && $updateConfigs) {
 
+                $this->emDebug("Forced update processing for config titled $title");
                 // If the force update is checked, update all the records that use this configuration
                 $update = $this->updateAllRecords($sc);
                 if ($update) {
@@ -122,6 +121,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
             }
         }
 
+        $this->emLog("Result $result and message: " . json_encode($messages));
         return array( $result, $messages);
     }
 
@@ -141,6 +141,8 @@ class Summarize extends \ExternalModules\AbstractExternalModule
         $update_needed = false;
         foreach($all_records as $record_id => $record_data) {
             $data_string = json_encode($record_data);
+            // We are checking for the repeat_instances string because redcap is weird and will return a non-repeat entry for this
+            // event even though this is a repeating form. We don't want to try to update that fictitious non-repeat entry.
             $repeat = strstr($data_string, 'repeat_instances');
 
             foreach($record_data as $event => $event_data) {
@@ -175,7 +177,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
      */
     function redcap_module_save_configuration($project_id) {
         $instances = $this->getSubSettings('instance');
-        list($results, $errors) = $this->validateConfigs($instances);
+        list($results, $errors) = $this->validateConfigs($instances, true);
 
         $this->emDebug("On SAVE", $results, $errors);
    }

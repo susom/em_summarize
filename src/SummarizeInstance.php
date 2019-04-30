@@ -303,7 +303,7 @@ class SummarizeInstance
             // If the user does not want to display the values on a separate row from
             // the label, see what the field label width should be.
             if (empty($this->field_label_width)) {
-                $label_width = 50;
+                $label_width = '';
             } else if ($this->field_label_width < self::MIN_LABEL_WIDTH) {
                 $label_width = self::MIN_LABEL_WIDTH;
             } else if ($this->field_label_width > self::MAX_LABEL_WIDTH) {
@@ -319,7 +319,7 @@ class SummarizeInstance
             $html .= "<h6 style='text-align:center'><b>$this->title</b></h6>";
         }
         $html .= "<table style='border: 1px solid #fefefe; border-spacing:0px; width:100%;'>";
-        if (empty($this->disp_value_under_name)) {
+        if (empty($this->disp_value_under_name) || empty($label_width)) {
             $html .= "<tr><th style='width:" . $label_width . "%'></th><th style='width:" . $value_width . "%'></th></tr>";
         }
 
@@ -332,7 +332,7 @@ class SummarizeInstance
 
             // Decide if this field value should be on a new line. If the length of the field value is longer than
             // the allowed length set in the configuration, display on a new line.
-            $new_line = (!empty($this->max_chars_per_column) && (strlen($text) > $this->max_chars_per_column) ? true : false);
+            $new_line = (isset($this->max_chars_per_column) && (($this->max_chars_per_column == 0) || (strlen($text) > $this->max_chars_per_column)) ? 1 : 0);
 
             if ($this->disp_value_under_name || $new_line) {
                 $html .= "<tr style='background: $color;'><td colspan=2 style='padding:5px; width:100%'>{$label}<div style='font-weight:normal; padding:5px 20px; width=100%;'>{$text}</div></td></tr>";

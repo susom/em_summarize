@@ -1,94 +1,169 @@
 // Create a javascript object to hold all of our config features
-var SummarizeConfig = SummarizeConfig || {};
+SummarizeConfig = {
 
-Object.assign(SummarizeConfig, {
-    "isDev":true
-});
+    init: function(params) {
+        // Make true
+        this.isDev = true;
+
+        // We need to delay a little bit for the rest of the config to finish loading
+        setTimeout(function() {
+            SummarizeConfig.configAjax.call(SummarizeConfig,'pages/ConfigAjax')
+        }, 200);
+    },
 
 
+    configAjax: function(page) {
 
-// Basic Logging function
-SummarizeConfig.log = function() {
-    if (!SummarizeConfig.isDev) return;
+        this.configureModal = $('#external-modules-configure-modal');
+        this.url = this.getAjaxUrl(page);
+        this.createStatusDiv('config_status');
 
-    // Make console logging more resilient to Redmond
-    try {
-        console.log.apply(this,arguments);
-    } catch(err) {
-        // Error trying to apply logs to console (problem with IE11)
-        try {
-            console.log(arguments);
-        } catch (err2) {
-            // Can't even do that!  Argh - no logging
+        // Add an event handler so on any change to the form, we update the status
+        this.configureModal.on('change', 'input, select, textarea', function() { SummarizeConfig.getStatus.call(SummarizeConfig); });
+
+        // Add event handler in case we return buttons after a status update
+        this.statusDiv.on('click', '.btn', function () { SummarizeConfig.doAction.call(SummarizeConfig); });
+
+        // Let's call getStatus once to start us off:
+        this.getStatus();
+
+        // $('tr.sub_start td:not([class]), tr.sub_start td[class=""]').each(function(i,j) {
+        //     nextTd = $(j).next('td');
+        //     $(j).remove();
+        //     nextTd.attr('colspan','2');
+        // });
+
+    },
+
+
+    getAjaxUrl: function(page) {
+        var moduleDirectoryPrefix = this.configureModal.data('module');
+        return app_path_webroot + "ExternalModules/?prefix=" + moduleDirectoryPrefix + "&page=" + encodeURIComponent(page) + "&pid=" + pid;
+    },
+
+
+    createStatusDiv: function(id) {
+        this.statusDiv = $('<div></div>')
+            .attr('id', id);
+        this.statusDiv
+            .wrap( $('<td>', { id: 'config-th', colspan: '3' }) )
+            .parent()
+            .wrap('<tr>')
+            .parent()
+            .prependTo('.modal-body tbody');
+    },
+
+
+    getStatus: function () {
+        // Assemble data from modal form
+        var raw = this.getRawForm();
+        var data = {
+            'action'    : 'getStatus',
+            'raw'       : raw
+        };
+         console.log("GET STATUS", data, this.url);
+
+        $.ajax({
+            method: "POST",
+            url: this.url,
+            data: data,
+            dataType: "json"
+        })
+        .done(function (data) {
+            // Data is a json array of:
+            // {
+            //   "result"   : false,
+            //   "messages" : ["<b>Configuration Issues with #1 'Title Goes <b>HERE<\/b>'<\/b><ul><li>Field asdf is not found in project<\/li><\/ul>"],
+            //   "callback" : null,
+            //   "delay"    : null
+            // }
+            // this.log("Ajax Done", data);
+
+            var configStatus = $('#config_status');
+            configStatus.html('');
+            var cls = data.result ? 'alert-success': 'alert-danger';
+            $.each(data.message, function (i, alert) {
+                $('<div></div>')
+                    .addClass('alert')
+                    .addClass(cls)
+                    .html(alert)
+                    .appendTo(configStatus);
+            });
+        })
+        .fail(function () {
+        })
+        .always(function() {
+        });
+    },
+
+
+    getRawForm: function() {
+        var data = {};
+        var inputs = $('#external-modules-configure-modal').find('input, select, textarea');
+
+        // this.log("In getRawForm");
+        //this.log(inputs.each(function(i,e){ this.log(i, $(e).attr('name')); }));
+
+        inputs.each(function(index, element) {
+
+            element = $(element);
+            var type = element[0].type;
+            // var name = element[0].getAttribute('name'); //.name.value; //element.attr('name');
+            var name = element.attr('name');
+            // this.log("--", element[0].attributes.name.nodeValue, name, element[0]);
+
+            if(!name || (type === 'radio' && !element.is(':checked'))){
+                this.log("Skipping", element);
+                return;
+            }
+
+            if (type === 'file') {
+                this.log("Skipping File", element);
+                return;
+            }
+
+            var value;
+            if(type === 'checkbox'){
+                value = element.prop('checked');
+            } else if(element.hasClass('external-modules-rich-text-field')){
+                var id = element.attr('id');
+                value = tinymce.get(id).getContent();
+            } else{
+                value = element.val();
+            }
+
+            data[name] = value;
+        });
+
+        // this.log("DATA", data);
+        return data;
+    },
+
+
+    // NOT USED HERE
+    doAction: function (element) {
+        var data = $(element).data();
+
+        // Action MUST be defined or we won't do anything
+        if (!data.action) {
+            alert ("Invalid Button - missing action");
+            return;
         }
-    }
-};
 
-
-// In cases where you want to handle a new subsetting with some custom defaults:
-SummarizeConfig.initSubSettingHandler = function() {
-    // Add an event handler in case someone adds a new 'instance' to a repeating subsetting
-    $('.external-modules-add-instance').on("click", function () {
-        SummarizeConfig.log("New instance created!");
-        if (! undefined(SummarizeConfig.newSubSetting)) setTimeout(SummarizeConfig.newSubSetting(), 1000);
-    });
-};
-SummarizeConfig.newSubSetting = function() {
-    this.log("New Subsetting!");
-};
-
-
-SummarizeConfig.config = function() {
-
-    // Set up our ajax url
-    var configureModal = $('#external-modules-configure-modal');
-    var moduleDirectoryPrefix = configureModal.data('module');
-    // var version = ExternalModules.versionsByPrefix[moduleDirectoryPrefix];
-    SummarizeConfig.url = app_path_webroot + "ExternalModules/?prefix=" + moduleDirectoryPrefix + "&page=pages%2FConfigAjax&pid="+pid;
-    SummarizeConfig.log(SummarizeConfig.url);
-
-    // Clear and Create a DIV to hold our status
-    $('#config_status').remove();
-    SummarizeConfig.alertWindow = $('<div></div>')
-        .attr('id', 'config_status')
-        .on('click', '.btn', function () { SummarizeConfig.doAction(this); })
-        .prependTo($('.modal-body', '#external-modules-configure-modal'));
-
-    // this.log("starting with this: ", this);
-
-    $(configureModal).on('change', 'input, select, textarea', SummarizeConfig.getStatus);
-
-
-    // Let's call getStatus once to start us off:
-    setTimeout(SummarizeConfig.getStatus, 300);
-};
-
-
-// Do an action -- NOT USED
-SummarizeConfig.doAction = function (e) {
-
-    const data = $(e).data();
-
-    // Action MUST be defined or we won't do anything
-    if (!data.action) {
-        alert ("Invalid Button - missing action");
-        return;
-    }
-
-    // Do the ajax call
-    $.ajax({
-        method: "POST",
-        url: SummarizeConfig.url,
-        data: data,
-        dataType: "json"
-    })
+        // Do the ajax call
+        $.ajax({
+            method: "POST",
+            url: this.url,
+            data: data,
+            dataType: "json"
+        })
         .done(function (data) {
             // Data should be in format of:
             // data.result   true/false
             // data.message  (optional)  message to display.
             // data.callback (function to call)
             // data.delay    (delay before callbackup in ms)
-            const cls = data.result ? 'alert-success' : 'alert-danger';
+            var cls = data.result ? 'alert-success' : 'alert-danger';
 
             // Render message if we have one
             if (data.message) {
@@ -108,7 +183,7 @@ SummarizeConfig.doAction = function (e) {
             }
 
             if (data.callback) {
-                const delay = data.delay ? data.delay : 0;
+                var delay = data.delay ? data.delay : 0;
 
                 //since configuration is set, set the defaults for the first configuration
                 setTimeout(window[data.callback](), delay);
@@ -120,118 +195,25 @@ SummarizeConfig.doAction = function (e) {
         .always(function() {
             SummarizeConfig.getStatus();
         });
-
-
-    //const event  = $(e).data('event');
-    //const form   = $(e).data('form');
-
-    //console.log(e, action, event, form);
-
-    //switch (action) {
-    //    case 'create_pi_form':
-    //        PortalConfig.insertForm('pi');
-    //        break;
-    //    case 'create_md_form':
-    //        PortalConfig.insertForm('md');
-    //        break;
-    //    case 'designate_event':
-    //        PortalConfig.designateForm(form, event);
-    //        break;
-    //    default:
-    //        alert ("Invalid action received from status button");
-    //}
-
-};
+    },
 
 
 
 
+    log: function() {
+        if (!this.isDev) return;
 
-
-// Get all the fields from the config form
-SummarizeConfig.getRawForm = function() {
-    var configureModal = $('#external-modules-configure-modal');
-    var data = {};
-
-    configureModal.find('input, select, textarea').each(function(index, element){
-        var element = $(element);
-        var name = element.attr('name');
-        var type = element[0].type;
-
-        if(!name || (type === 'radio' && !element.is(':checked'))){
-            SummarizeConfig.log("Skipping", element)
-            return;
-        }
-
-        if (type === 'file') {
-            SummarizeConfig.log("Skipping File", element)
-            return;
-        }
-
-
-        var value;
-        if(type === 'checkbox'){
-            if(element.prop('checked')){
-                value = true;
-            } else{
-                value = false;
+        // Make console logging more resilient to Redmond
+        try {
+            console.log.apply(this,arguments);
+        } catch(err) {
+            // Error trying to apply logs to console (problem with IE11)
+            try {
+                console.log(arguments);
+            } catch (err2) {
+                // Can't even do that!  Argh - no logging
             }
-        } else if(element.hasClass('external-modules-rich-text-field')){
-            var id = element.attr('id');
-            value = tinymce.get(id).getContent();
-        } else{
-            value = element.val();
         }
+    }
 
-        // SummarizeConfig.log("Name: " + name, value);
-
-        data[name] = value;
-    });
-
-    SummarizeConfig.log("DATA", data);
-
-    return data;
-};
-
-
-// Get status
-SummarizeConfig.getStatus = function () {
-
-    // Assemble data from modal form
-    let data = {
-        'action'    : 'getStatus',
-        'raw'       : SummarizeConfig.getRawForm()
-    };
-
-    SummarizeConfig.log("GET STATUS", data);
-
-    var jqxhr = $.ajax({
-        method: "POST",
-        url: SummarizeConfig.url,
-        data: data,
-        dataType: "json"
-    })
-        .done(function (data) {
-            //if (data.result === 'success') {
-            // all is good
-            var configStatus = $('#config_status');
-            configStatus.empty();
-            configStatus.html('');
-
-            const cls = data.result ? 'alert-success': 'alert-danger';
-
-            $.each(data.message, function (i, alert) {
-                $('<div></div>')
-                    .addClass('alert')
-                    .addClass(cls)
-                    .html(alert)
-                    .appendTo(configStatus);
-            })
-
-        })
-        .fail(function () {
-            //alert("error");
-        })
-        .always(function() {
-        });
 };
