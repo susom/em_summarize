@@ -19,10 +19,10 @@ SummarizeConfig = {
         this.createStatusDiv('config_status');
 
         // Add an event handler so on any change to the form, we update the status
-        this.configureModal.on('change', 'input, select, textarea', function() { SummarizeConfig.getStatus.call(SummarizeConfig); });
+        this.configureModal.on('change', 'input, select, textarea', SummarizeConfig.getStatus.bind(this));
 
         // Add event handler in case we return buttons after a status update
-        this.statusDiv.on('click', '.btn', function () { SummarizeConfig.doAction.call(SummarizeConfig); });
+        this.statusDiv.on('click', '.btn', SummarizeConfig.doAction.bind(this));
 
         // Let's call getStatus once to start us off:
         this.getStatus();
