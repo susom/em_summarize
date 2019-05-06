@@ -220,11 +220,14 @@ class SummarizeInstance
         $data = REDCap::getData('array', $record, array_keys($this->all_fields), $this->event_id,
             null, null, null, null, null, TRUE);
 
-        $displayData = $this->retrieveSummarizeData($data[$record], $repeat_instance);
+        $repeat = $this->isThisARepeatingForm();
+        //$this->module->emLog("Is this repeating? " . ($repeat ? 1 : 0) );
+
+        $displayData = $this->retrieveSummarizeData($data[$record], $repeat, $repeat_instance);
         $html = $this->createSummarizeBlock($displayData);
 
         // Save this summarize field
-        if ($displayData["repeat"]) {
+        if ($repeat) {
             if (count($this->include_forms) == 1) {
                 $saveData[$record]['repeat_instances'][$this->event_id][$this->include_forms[0]][$repeat_instance] = array($this->destination_field => $html);
             } else {
@@ -237,7 +240,7 @@ class SummarizeInstance
         $return = REDCap::saveData('array', $saveData, 'overwrite');
         if (!empty($return["errors"])) {
             $saved = false;
-            $this->errors = "Error saving summarize block: " . $return["errors"];
+            $this->errors = "Error saving summarize block: " . json_encode($return["errors"]);
             $this->module->emError($this->errors);
         }
 
@@ -245,42 +248,70 @@ class SummarizeInstance
     }
 
     /**
+     * Determine if this is a repeating form based on the instrument and event_id.
+     * We must go to the data dictionary in order to make a determination.
+     *
+     * @return bool - true if this is a repeating form and false if not
+     */
+    private function isThisARepeatingForm()
+    {
+        // Determine if this is a repeating form
+        $repeat = false;
+        if (!empty($this->Proj->RepeatingFormsEvents[$this->event_id])) {
+            $repeatingForms = array_keys($this->Proj->RepeatingFormsEvents[$this->event_id]);
+            if ($repeatingForms == 'WHOLE') {
+                $repeat = true;
+            } else {
+                $nonRepeatForms = array_diff($this->all_forms, $repeatingForms);
+                if (empty($nonRepeatForms)) {
+                    $repeat = true;
+                }
+            }
+        }
+
+        return $repeat;
+    }
+
+
+    /**
      * This function re-formats the data retrieved from REDCap for the Summarize blocks.
      *
      * @param $data - Data retrieved from REDCap
+     * @param $repeat = true if this is a repeat instance/event or false if not
      * @param $repeat_instance - instance of the repeating form
      * @return array - User friendly array of data
      */
-    private function retrieveSummarizeData($data, $repeat_instance) {
+    private function retrieveSummarizeData($data, $repeat, $repeat_instance) {
 
-        // Retrieve the data we want from the return REDCap data.  We are adding a repeat entry if this
-        // data is from a repeating form/event so we know how to send back the data to REDCap.
+        // Retrieve the data we want from the return REDCap data.
         $fields = array();
         foreach($data as $eventID => $eventInfo) {
-            if ($eventID == "repeat_instances") {
-                $fields["repeat"] = true;
+            if ($repeat) {
                 foreach ($eventInfo[$this->event_id] as $formName => $formData) {
                     foreach ($formData[$repeat_instance] as $fieldname => $fieldValue) {
-                        if (isset($fieldValue) && ($fieldValue !== '')) {
+                        if ($fieldValue !== '') {
                             $thisField = $this->Proj->metadata[$fieldname];
                             $eachField = array();
                             $eachField["fieldLabel"] = $thisField["element_label"];
                             $eachField["value"] = $this->getLabel($thisField, $fieldValue);
-                            if (!empty($eachField["value"])) {
+                            if ($eachField["value"] != '') {
                                 $fields[$fieldname] = $eachField;
                             }
                         }
                     }
                 }
             } else {
-                $fields["repeat"] = false;
+
+                // This is for non-repeating instances
                 foreach(array_keys($this->all_fields) as $fieldkey => $fieldname) {
-                    $thisField = $this->Proj->metadata[$fieldname];
-                    $eachField = array();
-                    $eachField["fieldLabel"] = $thisField["element_label"];
-                    $eachField["value"] = $this->getLabel($thisField, $eventInfo[$fieldname]);
-                    if (!empty($eachField["value"])) {
-                        $fields[$fieldname] = $eachField;
+                    if ($eventInfo[$fieldname] !== '') {
+                        $thisField = $this->Proj->metadata[$fieldname];
+                        $eachField = array();
+                        $eachField["fieldLabel"] = $thisField["element_label"];
+                        $eachField["value"] = $this->getLabel($thisField, $eventInfo[$fieldname]);
+                        if ($eachField["value"] != '') {
+                            $fields[$fieldname] = $eachField;
+                        }
                     }
                 }
             }
