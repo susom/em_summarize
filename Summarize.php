@@ -13,6 +13,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 
     public  $Proj;           // A reference to the main Proj
     private $subSettings;   // An array of subsettings under the instance key
+    private $deleteAction = null;
 
     public function __construct()
     {
@@ -135,29 +136,30 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 
         $all_fields = $sc->retrieveAllFields();
         $event_id = $sc->retrieveEventID();
+        $repeat = $sc->isThisARepeatingForm();
         $all_records = REDCap::getData('array', null, array_keys($all_fields), $event_id);
 
         // For this config, update all records
         $update_needed = false;
         foreach($all_records as $record_id => $record_data) {
-            $data_string = json_encode($record_data);
             // We are checking for the repeat_instances string because redcap is weird and will return a non-repeat entry for this
             // event even though this is a repeating form. We don't want to try to update that fictitious non-repeat entry.
-            $repeat = strstr($data_string, 'repeat_instances');
 
             foreach($record_data as $event => $event_data) {
-                if ($event == 'repeat_instances') {
+                // Repeat = 1 for repeating form or repeat = 2 for repeating event
+                if ($repeat > 0) {
                     foreach($event_data[$event_id] as $form => $form_data) {
                         foreach($form_data as $instance => $instance_data) {
-                            $result = $sc->saveSummarizeBlock($record_id, $instance);
+                            $result = $sc->saveSummarizeBlock($record_id, null, $instance);
                             if ($result) {
                                 $update_needed = true;
                             }
                         }
                     }
                 } else {
-                    if ($repeat == false) {
-                        $result = $sc->saveSummarizeBlock($record_id, null);
+                    // Repeat of 0 means it is not a repeating form or event
+                    if ($repeat == 0) {
+                        $result = $sc->saveSummarizeBlock($record_id, null, null);
                         if ($result) {
                             $update_needed = true;
                         }
@@ -180,6 +182,14 @@ class Summarize extends \ExternalModules\AbstractExternalModule
         list($results, $errors) = $this->validateConfigs($instances, true);
 
         $this->emDebug("On SAVE", $results, $errors);
+   }
+
+   function redcap_every_page_before_render() {
+        if (@$_POST['submit-action'] === 'submit-btn-deleteform') {
+            $this->deleteAction = 'deleteForm';
+        }
+       $this->emLog(PAGE, $_POST, $_GET);
+
    }
 
     /**
@@ -215,7 +225,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
                 // If valid put together the summarize block and save it for this record
                 $config_num = $i++;
                 if ($valid) {
-                    $saved = $sc->saveSummarizeBlock($record, $repeat_instance);
+                    $saved = $sc->saveSummarizeBlock($record, $instrument, $repeat_instance, $this->deleteAction);
                     if ($saved) {
                         $this->emDebug("Saved summarize block $config_num for record $record and instance $repeat_instance");
                     } else {

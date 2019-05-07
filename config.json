@@ -22,7 +22,8 @@
 
   "permissions": [
     "redcap_module_save_configuration",
-    "redcap_save_record"
+    "redcap_save_record",
+    "redcap_every_page_before_render"
   ],
 
   "links": {

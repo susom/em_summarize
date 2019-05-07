@@ -22,6 +22,7 @@ class SummarizeInstance
     private $exclude_fields;
     private $event_id;
     private $destination_field;
+    private $destination_form;
     private $remove_form_status;
     private $all_fields;
     private $all_forms;
@@ -33,6 +34,9 @@ class SummarizeInstance
     private $max_chars_per_column;
     const MIN_LABEL_WIDTH = 10;
     const MAX_LABEL_WIDTH = 90;
+    const NO_REPEAT = 0;
+    const REPEAT_FORM = 1;
+    const REPEAT_EVENT = 2;
 
     // Currently only errors is used
     private $status;
@@ -116,6 +120,7 @@ class SummarizeInstance
         // Include Destination Field Form
         $form = $this->Proj->metadata[$this->destination_field]['form_name'];
         if (!in_array($form, $all_forms)) $all_forms[] = $form;
+        $this->destination_form = $form;
 
         // Remove destination field if included in the source forms/fields
         if (in_array($this->destination_field, array_keys($all_fields))) unset($all_fields[$this->destination_field]);
@@ -191,10 +196,11 @@ class SummarizeInstance
         }
 
         // Only one form if any form is a repeating form
-        $repeating_forms_events = $this->Proj->getRepeatingFormsEvents($this->event_id);
-        if (!empty($repeating_forms_events) && $repeating_forms_events != "WHOLE") {
-            $array_intersection = array_intersect($this->all_forms, $repeating_forms_events);
-            if (!empty($array_intersection) && count($this->all_forms) > 1) {
+        $repeating_forms_events = $this->Proj->getRepeatingFormsEvents();
+        if (!empty($repeating_forms_events[$this->event_id]) && $repeating_forms_events[$this->event_id] != "WHOLE") {
+            $array_diff = array_diff($this->all_forms, array_keys($repeating_forms_events[$this->event_id]));
+            //$this->module->emLog("This is array diff " . json_encode($array_diff));
+            if (!empty($array_diff) && count($this->all_forms) > 1) {
                 $this->errors[] = "If a form is repeating in an event, only fields from that single form can be summarized";
             }
         }
@@ -213,26 +219,38 @@ class SummarizeInstance
      * @param $repeat_instance - for repeating forms
      * @return bool - true/false if Summarize block was successfully saved
      */
-    public function saveSummarizeBlock($record, $repeat_instance)
+    public function saveSummarizeBlock($record, $instrument, $repeat_instance, $deleteAction = null)
     {
         $saved = true;
         // Retrieve the data
         $data = REDCap::getData('array', $record, array_keys($this->all_fields), $this->event_id,
             null, null, null, null, null, TRUE);
 
+        if (!empty($instrument) && !in_array($instrument, $this->all_forms)) {
+            // This form is not part of summarize - lets skip
+            $this->module->emDebug("Skipping $instrument in event $this->event_id because it is not affected", $instrument, $this->all_forms);
+            return false;
+        }
+
+        // Use CONST, NO_REPEAT (0), REPEAT_FORM (1) and REPEAT_EVENT (2)
         $repeat = $this->isThisARepeatingForm();
-        //$this->module->emLog("Is this repeating? " . ($repeat ? 1 : 0) );
+
+        // Are we deleting a form on a repeating form page?
+        if (@$deleteAction === "deleteForm" && $this->destination_form === @$instrument) {
+            // do not save the new summary because this instance is being deleted
+            $this->module->emDebug("Skipping save - deleting instance of form $instrument");
+            return false;
+        }
+
 
         $displayData = $this->retrieveSummarizeData($data[$record], $repeat, $repeat_instance);
         $html = $this->createSummarizeBlock($displayData);
 
         // Save this summarize field
-        if ($repeat) {
-            if (count($this->include_forms) == 1) {
-                $saveData[$record]['repeat_instances'][$this->event_id][$this->include_forms[0]][$repeat_instance] = array($this->destination_field => $html);
-            } else {
-                $saveData[$record]['repeat_instances'][$this->event_id][""][$repeat_instance] = array($this->destination_field => $html);
-            }
+        if ($repeat === self::REPEAT_FORM) {
+            $saveData[$record]['repeat_instances'][$this->event_id][$this->destination_form][$repeat_instance] = array($this->destination_field => $html);
+        } else if ($repeat === self::REPEAT_EVENT) {
+            $saveData[$record]['repeat_instances'][$this->event_id][""][$repeat_instance] = array($this->destination_field => $html);
         } else {
             $saveData[$record][$this->event_id] = array($this->destination_field => $html);
         }
@@ -253,21 +271,23 @@ class SummarizeInstance
      *
      * @return bool - true if this is a repeating form and false if not
      */
-    private function isThisARepeatingForm()
+    public function isThisARepeatingForm()
     {
         // Determine if this is a repeating form
-        $repeat = false;
-        if (!empty($this->Proj->RepeatingFormsEvents[$this->event_id])) {
-            $repeatingForms = array_keys($this->Proj->RepeatingFormsEvents[$this->event_id]);
-            if ($repeatingForms == 'WHOLE') {
-                $repeat = true;
+        $repeat = self::NO_REPEAT;
+        $repeating = $this->Proj->RepeatingFormsEvents[$this->event_id];
+        if (!empty($repeating)) {
+            if ($repeating == 'WHOLE') {
+                $repeat = self::REPEAT_EVENT;
             } else {
+                $repeatingForms = array_keys($this->Proj->RepeatingFormsEvents[$this->event_id]);
                 $nonRepeatForms = array_diff($this->all_forms, $repeatingForms);
                 if (empty($nonRepeatForms)) {
-                    $repeat = true;
+                    $repeat = self::REPEAT_FORM;
                 }
             }
         }
+        $this->module->emLog("Instrument(s): " . implode(',', $this->all_forms) . " has the repeat value of " . $repeat . " for event ID " . $this->event_id);
 
         return $repeat;
     }
@@ -286,7 +306,7 @@ class SummarizeInstance
         // Retrieve the data we want from the return REDCap data.
         $fields = array();
         foreach($data as $eventID => $eventInfo) {
-            if ($repeat) {
+            if (($repeat === self::REPEAT_FORM) or ($repeat === self::REPEAT_EVENT)) {
                 foreach ($eventInfo[$this->event_id] as $formName => $formData) {
                     foreach ($formData[$repeat_instance] as $fieldname => $fieldValue) {
                         if ($fieldValue !== '') {
@@ -327,7 +347,7 @@ class SummarizeInstance
      * @param $display_data - Data to display in Summarize block
      * @return string - Formatted html table
      */
-    private function createSummarizeBlock($display_data) {
+    private function createSummarizeBlock($display_data, $instrument=null) {
 
         // Check to see how the user wants this displayed
         if (!$this->disp_value_under_name) {
