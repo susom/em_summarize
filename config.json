@@ -110,19 +110,19 @@
         },
         {
           "key": "disp_value_under_name",
-          "name": "<b>Display field values under field names</b><br>When checked, field values will be displayed in a row under the field name. When this checkbox is selected, the next value, Ratio of Field Label Column, is not used",
+          "name": "<b>Display field values under field names  </b><i style = \"color:green; font-size:18px\" class=\"fas fa-info-circle\" data-toggle=\"popover\" data-content=\"When checked, field values will be displayed in a row under the field name. When this checkbox is selected, the next value, Ratio of Field Label Column, is not used\"></i>",
           "required": false,
           "type": "checkbox"
         },
         {
           "key": "field_label_width",
-          "name": "<b>Field label width (left column)</b><br>This value specifies what percentage of the display table is devoted to the field label. The range for this value is 10 (10% of table) to 90 (90% of table). The remainder of the table will be used for the field value. If the entered value is outside of this range, the min or max value will be used. If this field is blank, the browser will determine the column widths. When the field value is displayed below the field label, this value is not used.",
+          "name": "<b>Field label width (left column)  </b><i style = \"color:green; font-size:18px\" class=\"fas fa-info-circle\" data-toggle=\"popover\" data-content=\"This value specifies what percentage of the display table is devoted to the field label. The range for this value is 10 (10% of table) to 90 (90% of table). The remainder of the table will be used for the field value. If the entered value is outside of this range, the min or max value will be used. If this field is blank, the browser will determine the column widths. When the field value is displayed below the field label, this value is not used.\"></i>",
           "required": false,
           "type": "text"
         },
         {
           "key": "max_chars_per_column",
-          "name": "<b>Max characters for new row</b><br>This value specifies when the field value will be displayed under the field label. For individual fields, if the length of field value exceeds the number entered here, the field value will be displayed under the field label instead of next to it in a separate column.  For instance, if you have several sentences written in a textarea field, that one field will be displayed under the field label when all the other fields are displayed in a second column. When blank, the field value will wrap in the second column. When the field value is displayed below the field label (checkbox selected above), this value is not used.",
+          "name": "<b>Max characters for new row   </b><i style = \"color:green; font-size:18px\" class=\"fas fa-info-circle\" data-toggle=\"popover\" data-content=\"This value specifies when the field value will be displayed under the field label. For individual fields, if the length of field value exceeds the number entered here, the field value will be displayed under the field label instead of next to it in a separate column.  For instance, if you have several sentences written in a textarea field, that one field will be displayed under the field label when all the other fields are displayed in a second column. When blank, the field value will wrap in the second column. When the field value is displayed below the field label (checkbox selected above), this value is not used.\"></i>",
           "required": false,
           "type": "text"
         },

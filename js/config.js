@@ -9,6 +9,10 @@ SummarizeConfig = {
         setTimeout(function() {
             SummarizeConfig.configAjax.call(SummarizeConfig,'pages/ConfigAjax')
         }, 200);
+
+        $(document).ready(function() {
+            $('[data-toggle="popover"]').popover({html: true});
+        });
     },
 
 
@@ -215,5 +219,10 @@ SummarizeConfig = {
             }
         }
     }
-
 };
+
+
+// $(document).ready(function() {
+//     // $('button').popover({container: 'body'});
+//     $('[data-toggle="popover"]').popover();
+// });
