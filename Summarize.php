@@ -11,7 +11,6 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 {
     use emLoggerTrait;
 
-    public  $Proj;           // A reference to the main Proj
     private $subSettings;   // An array of subsettings under the instance key
     private $deleteAction = null;
 
@@ -48,7 +47,8 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 
     /**
      * This function takes the settings for each Summarize configuration and rearranges them into arrays of subsettings
-     * instead of arrays of key/value pairs.
+     * instead of arrays of key/value pairs. This is called from javascript so each configuration
+     * can be verified in real-time.
      *
      * @param $key - JSON key where the subsettings are stored
      * @param $settings - retrieved list of subsettings from the getProjectSettings function
@@ -111,7 +111,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 
                 $this->emDebug("Forced update processing for config titled $title");
                 // If the force update is checked, update all the records that use this configuration
-                $update = $this->updateAllRecords($sc);
+                $update = $this->updateAllRecords($sc, $title);
                 if ($update) {
                     // If we successfully updated all record using this config, uncheck the refresh checkbox in the configuration settings
                     $refresh_status = $this->getProjectSetting("refresh");
@@ -132,7 +132,7 @@ class Summarize extends \ExternalModules\AbstractExternalModule
      * @param $sc - address of the handle to the SummarizeInstance class
      * @return bool - update status true/false if the update was successful
      */
-    private function updateAllRecords(&$sc) {
+    private function updateAllRecords(&$sc, $title) {
 
         $all_fields = $sc->retrieveAllFields();
         $event_id = $sc->retrieveEventID();
@@ -167,6 +167,9 @@ class Summarize extends \ExternalModules\AbstractExternalModule
                 }
             }
         }
+
+        // Log the fact that this is updating all record
+        REDCap::logEvent("Force Update", "Updating all Summarize blocks for config " . $title);
 
         return $update_needed;
     }

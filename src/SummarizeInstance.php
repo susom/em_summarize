@@ -208,6 +208,11 @@ class SummarizeInstance
         // Validate that all is right with this config
         $result = empty($this->errors);
 
+        // Log the fact that these configuration errors were found
+        if (!empty($this->errors)) {
+            REDCap::logEvent("Summarize Configuration Errors", json_encode($this->errors));
+        }
+
         return $result;
     }
 
@@ -260,7 +265,7 @@ class SummarizeInstance
             $saved = false;
             $this->errors = "Error saving summarize block: " . json_encode($return["errors"]);
             $this->module->emError($this->errors);
-        }
+       }
 
         return $saved;
     }
@@ -379,16 +384,19 @@ class SummarizeInstance
             $label = $fieldValue["fieldLabel"];
             $value = $fieldValue["value"];
             $text = str_replace("\n","<br>",$value);
+            $filteredText = REDCap::filterHtml($text);
+            $filteredLabel = REDCap::filterHtml($label);
+
             $color = ($odd ? '#fefefe' : '#fafafa');
 
             // Decide if this field value should be on a new line. If the length of the field value is longer than
             // the allowed length set in the configuration, display on a new line.
-            $new_line = (isset($this->max_chars_per_column) && (($this->max_chars_per_column == 0) || (strlen($text) > $this->max_chars_per_column)) ? 1 : 0);
+            $new_line = (isset($this->max_chars_per_column) && (($this->max_chars_per_column == 0) || (strlen($filteredText) > $this->max_chars_per_column)) ? 1 : 0);
 
             if ($this->disp_value_under_name || $new_line) {
-                $html .= "<tr style='background: $color;'><td colspan=2 style='padding:5px; width:100%'>{$label}<div style='font-weight:normal; padding:5px 20px; width=100%;'>{$text}</div></td></tr>";
+                $html .= "<tr style='background: $color;'><td colspan=2 style='padding:5px; width:100%'>{$filteredLabel}<div style='font-weight:normal; padding:5px 20px; width=100%;'>{$filteredText}</div></td></tr>";
             } else {
-                $html .= "<tr style='background: $color;'><td style='padding:5px;'>{$label}</td><td style='font-weight:normal;'>{$text}</td></tr>";
+                $html .= "<tr style='background: $color;'><td style='padding:5px;'>{$filteredLabel}</td><td style='font-weight:normal;'>{$filteredText}</td></tr>";
             }
             $odd = !$odd;
         }
