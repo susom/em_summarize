@@ -197,10 +197,17 @@ class SummarizeInstance
 
         // Only one form if any form is a repeating form
         $repeating_forms_events = $this->Proj->getRepeatingFormsEvents();
+
+        $this->emDebug("RepeatingFormsEvents", $repeating_forms_events);
         if (!empty($repeating_forms_events[$this->event_id]) && $repeating_forms_events[$this->event_id] != "WHOLE") {
+            // Not a repeating event, but we do have at least one repeating form
+
             $array_diff = array_diff($this->all_forms, array_keys($repeating_forms_events[$this->event_id]));
             //$this->module->emLog("This is array diff " . json_encode($array_diff));
             if (!empty($array_diff) && count($this->all_forms) > 1) {
+
+                $this->emDebug($this->all_forms, array_keys($repeating_forms_events[$this->event_id]), $array_diff, count($this->all_forms));
+
                 $this->errors[] = "If a form is repeating in an event, only fields from that single form can be summarized";
             }
         }
