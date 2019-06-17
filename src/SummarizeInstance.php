@@ -201,14 +201,14 @@ class SummarizeInstance
         $this->module->emDebug("RepeatingFormsEvents", $repeating_forms_events);
         if (!empty($repeating_forms_events[$this->event_id]) && $repeating_forms_events[$this->event_id] != "WHOLE") {
             // Not a repeating event, but we do have at least one repeating form
+            $non_repeating_forms = array_diff($this->all_forms, array_keys($repeating_forms_events[$this->event_id]));
 
-            $array_diff = array_diff($this->all_forms, array_keys($repeating_forms_events[$this->event_id]));
-            //$this->module->emLog("This is array diff " . json_encode($array_diff));
-            if (!empty($array_diff) && count($this->all_forms) > 1) {
-
-                $this->module->emDebug($this->all_forms, array_keys($repeating_forms_events[$this->event_id]), $array_diff, count($this->all_forms));
-
-                $this->errors[] = "If a form is repeating in an event, only fields from that single form can be summarized";
+            if (count($this->all_forms) != count($non_repeating_forms)) {
+                // One or more of our summarized forms includes one or more repeating forms
+                if (count($this->all_forms > 1)) {
+                    $this->errors[] = "If a form is repeating in an event, only fields from that single form can be summarized";
+                    $this->module->emDebug($this->all_forms, array_keys($repeating_forms_events[$this->event_id]), $non_repeating_forms, count($this->all_forms));
+                }
             }
         }
 
