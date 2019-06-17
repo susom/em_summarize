@@ -1,7 +1,7 @@
 {
   "name": "Summarize",
   "namespace": "Stanford\\Summarize",
-  "description": "This is a utility EM to make summaries of data within a project. This EM is based off the summarize plugin.",
+  "description": "Create nice, html summaries from forms or fields in a project.  You can then pipe this summary in forms, surveys, emails or anywhere else in REDCap.",
   "authors": [
     {
       "name": "Andy Martin",
@@ -51,12 +51,12 @@
   "project-settings": [
     {
       "key": "description",
-      "name": "<h6 style='text-align:center;color:red'><b>Organize project fields into an easy-to-read table</b></h6>This tool allows users to format data from your project into an easy-to-read table structure. Summarize uses the configuration specified below to determine which fields to include and how to display the data. HTML is generated for each record and each configuration and the html is stored in a project field that is specified in the configuration. The html can then be piped to a descriptive field to be displayed on a project form or can be used to pipe project information into emails or surveys.<br><br>The data that can be used in a Summarize table is confined to project fields in the same event.  If you would like to display project fields across events or fields from another project, please use the Data Table External Module instead.",
+      "name": "<h6 class='text-center text-primary primary-success'><b>Organize project fields into an easy-to-read table</b></h6><p>This tool allows users to format data from your project into an easy-to-read table structure. Summarize uses the configuration specified below to determine which fields to include and how to display the data. HTML is generated for each record and each configuration and the html is stored in a project field that is specified in the configuration. The html can then be piped to a descriptive field to be displayed on a project form or can be used to pipe project information into emails or surveys.</p><p>The data that can be used in a Summarize table is confined to project fields in the same event -- you can not do cross-event or cross-instance summarize tables.  If you need this functionality, please ask about the Data Table External Module.</p><p>You can configure multiple summarize instances for a given project by clicking on the + below</p>",
       "type": "descriptive"
     },
     {
       "key": "instance",
-      "name": "<b>Configure Summarize Instance</b>",
+      "name": "<b>Summarize Configuration</b>",
       "required": true,
       "type": "sub_settings",
       "repeatable": true,
@@ -81,19 +81,19 @@
         },
         {
           "key": "include_forms",
-          "name": "<b>List of forms to include</b><br/>A commas-separated list of form names",
+          "name": "<b>List of forms to include</b><br/>A comma or space delimited list of form names",
           "required": false,
           "type": "textarea"
         },
         {
           "key": "include_fields",
-          "name": "<b>List of individual fields to include</b><br/>A comma-separated list of fields (in addition to above forms)",
+          "name": "<b>List of individual fields to include</b><br/>A comma or space delimited list of fields (in addition to above forms)",
           "required": false,
           "type": "textarea"
         },
         {
           "key": "exclude_fields",
-          "name": "<b>List of fields to exclude (from the list of forms to include)</b><br/>A comma-separated list of fields to exclude",
+          "name": "<b>List of fields to exclude (from the list of forms to include)</b><br/>A comma or space delimited list of fields to exclude",
           "required": false,
           "type": "textarea"
         },
@@ -136,12 +136,12 @@
     },
     {
       "key": "description4",
-      "name": "<h6 style='color:red;'><b>Project Debugging Option</b></h6>This will allow for extra debugging statements to be written to the project log files for the whole project - not just one configuration.",
+      "name": "<h6 class='text-center text-danger'><b>Project Debugging</b></h6>Additional debug logs will be written to disk using the emLogger utility if enabled.  This requires emLogger.",
       "type": "descriptive"
     },
     {
       "key": "enable-project-debug-logging",
-      "name": "<b>Enable Debug Logging</b></h6><i> (Requires emLogger)</i><br>If you have questions enabling debugging, please contact the REDCap team for help.",
+      "name": "<b>Enable emLogger Debug Statements</b></h6>",
       "required": false,
       "type": "checkbox",
       "source": "js/config.js",
