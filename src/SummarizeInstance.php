@@ -205,7 +205,7 @@ class SummarizeInstance
 
             if (count($this->all_forms) != count($non_repeating_forms)) {
                 // One or more of our summarized forms includes one or more repeating forms
-                if (count($this->all_forms > 1)) {
+                if (count($this->all_forms) > 1) {
                     $this->errors[] = "If a form is repeating in an event, only fields from that single form can be summarized";
                     $this->module->emDebug($this->all_forms, array_keys($repeating_forms_events[$this->event_id]), $non_repeating_forms, count($this->all_forms));
                 }
