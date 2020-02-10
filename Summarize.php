@@ -212,6 +212,9 @@ class Summarize extends \ExternalModules\AbstractExternalModule
     function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id,
                               $survey_hash, $response_id, $repeat_instance) {
 
+        // Log the fact we are starting processing for this project/event ID/record
+        $this->emDebug("In Summarize EM for project $project_id, record $record, and instrument $instrument.");
+
         // Retrieve each saved config
         $instances = $this->getSubSettings('instance');
 
@@ -239,6 +242,9 @@ class Summarize extends \ExternalModules\AbstractExternalModule
                 }
             }
         }
+
+        // Log the fact that we are done processing for this project id/event id/record
+        $this->emDebug("Leaving Summarize EM for project $project_id, record $record, and instrument $instrument");
     }
 
 }
