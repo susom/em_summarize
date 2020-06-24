@@ -181,10 +181,11 @@ class Summarize extends \ExternalModules\AbstractExternalModule
      * @param $project_id - this is the standard parameter for this hook but since we are in project context, we don't use it
      */
     function redcap_module_save_configuration($project_id) {
-        $instances = $this->getSubSettings('instance');
-        list($results, $errors) = $this->validateConfigs($instances, true);
-
-        $this->emDebug("On SAVE", $results, $errors);
+        if (!empty($project_id)) {
+            $instances = $this->getSubSettings('instance');
+            list($results, $errors) = $this->validateConfigs($instances, true);
+            $this->emDebug("On SAVE", $results, $errors);
+        }
    }
 
    function redcap_every_page_before_render() {
