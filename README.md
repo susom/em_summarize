@@ -34,8 +34,5 @@ There are a number of options to help streamline the rendering and display of th
 1. If the source forms/fields are in a repeating event, the destination field must be in that repeating event.
 
 ## Future Enhancements
-1. Use light/dark row background
 1. Width Options: Auto, 1:2, 2:1?
- - *DONE: you can down specify the widths of the columns
 1. Include section headers
-1. Include empty fields (normally fields with no value are excluded from summary)

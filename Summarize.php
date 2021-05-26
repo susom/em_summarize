@@ -6,6 +6,7 @@ require_once("emLoggerTrait.php");
 require_once("src/SummarizeInstance.php");
 
 use \REDCap;
+use \Exception;
 
 class Summarize extends \ExternalModules\AbstractExternalModule
 {
@@ -93,7 +94,11 @@ class Summarize extends \ExternalModules\AbstractExternalModule
         $messages = [];
 
         foreach ($instances as $i => $instance) {
-            $sc = new SummarizeInstance($this, $instance);
+            try {
+                $sc = new SummarizeInstance($this, $instance);
+            } catch (Exception $ex) {
+                $this->emError("Catch Exception during validating config: " . json_encode($ex));
+            }
 
             // Get result
             $valid = $sc->validateConfig();
@@ -226,7 +231,11 @@ class Summarize extends \ExternalModules\AbstractExternalModule
             if ($instance["event_id"] == $event_id) {
 
                 // See if this config is valid
-                $sc = new SummarizeInstance($this, $instance);
+                try {
+                    $sc = new SummarizeInstance($this, $instance);
+                } catch (Exception $ex) {
+                    $this->emError("Catch Exception creating SummarizeInstance: " . $ex);
+                }
                 $valid = $sc->validateConfig();
 
                 // If valid put together the summarize block and save it for this record
@@ -243,9 +252,6 @@ class Summarize extends \ExternalModules\AbstractExternalModule
                 }
             }
         }
-
-        // Log the fact that we are done processing for this project id/event id/record
-        $this->emDebug("Leaving Summarize EM for project $project_id, record $record, and instrument $instrument");
     }
 
 }

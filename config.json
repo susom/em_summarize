@@ -127,6 +127,24 @@
           "type": "text"
         },
         {
+          "key": "display_blanks",
+          "name": "<b>Display blank fields</b><i style = \"color:green; font-size:18px\" class=\"fas fa-info-circle\" data-toggle=\"popover\" data-content=\"When checked, fields that don't have values will be displayed.  When not checked, fields with no values WILL NOT be displayed.\"></i>",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "key": "prim_color",
+          "name": "<b>Primary display color</b><i style = \"color:green; font-size:18px\" class=\"fas fa-info-circle\" data-toggle=\"popover\" data-content=\"Primary color to use in the Summarize display. Default color is #fefefe. Enter a hex value. This color will be used for the title and even numbered rows.\"></i>",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "key": "sec_color",
+          "name": "<b>Secondary display color</b><i style = \"color:green; font-size:18px\" class=\"fas fa-info-circle\" data-toggle=\"popover\" data-content=\"Secondary color to use in the Summarize display for row alternating color.  Default color is #fafafa. Enter a hex value. This color will be used for odd numbered rows.\"></i>",
+          "required": false,
+          "type": "text"
+        },
+        {
           "key": "refresh",
           "name": "<b>Force Refresh</b><br>When selected, all records using this Summarize configuration will be refreshed.",
           "required": false,

@@ -13,9 +13,6 @@ use \REDCap;
  */
 class SummarizeInstance
 {
-    /** @var \Stanford\Summarize\Summarize $module */
-    private $module;
-
     // Determines which fields should be included in the summarize block
     private $include_forms;
     private $include_fields;
@@ -26,6 +23,7 @@ class SummarizeInstance
     private $remove_form_status;
     private $all_fields;
     private $all_forms;
+    private $display_blanks;
 
     // Determines the layout of the summarize block
     private $title;
@@ -37,6 +35,8 @@ class SummarizeInstance
     const NO_REPEAT = 0;
     const REPEAT_FORM = 1;
     const REPEAT_EVENT = 2;
+    const DEFAULT_PRIM_ROW_COLOR = "#fefefe";
+    const DEFAULT_SEC_ROW_COLOR = "#fafafa";
 
     // Currently only errors is used
     private $status;
@@ -45,6 +45,7 @@ class SummarizeInstance
 
     public function __construct($module, $instance)
     {
+        global $Proj;
         $this->module = $module;
 
         $this->include_forms            = $this->parseConfigList( $instance['include_forms']  );
@@ -57,14 +58,14 @@ class SummarizeInstance
         $this->field_label_width        = $instance['field_label_width'];
         $this->max_chars_per_column     = $instance['max_chars_per_column'];
         $this->remove_form_status       = $instance['remove_form_status'];
+        $this->display_blanks           = $instance['display_blanks'];
+        $this->prim_color               = ($instance['prim_color'] == '' ? self::DEFAULT_PRIM_ROW_COLOR : $instance['prim_color']);
+        $this->sec_color                = ($instance['sec_color'] == '' ? self::DEFAULT_SEC_ROW_COLOR : $instance['sec_color']);
 
-        global $Proj;
         $this->Proj = $Proj;
         $this->Proj->setRepeatingFormsEvents();
 
         $this->getAllFields();
-
-        $this->module->emDebug("Forms", $this->include_forms);
     }
 
     /**
@@ -198,7 +199,6 @@ class SummarizeInstance
         // Only one form if any form is a repeating form
         $repeating_forms_events = $this->Proj->getRepeatingFormsEvents();
 
-        $this->module->emDebug("RepeatingFormsEvents", $repeating_forms_events);
         if (!empty($repeating_forms_events[$this->event_id]) && $repeating_forms_events[$this->event_id] != "WHOLE") {
             // Not a repeating event, but we do have at least one repeating form
             $non_repeating_forms = array_diff($this->all_forms, array_keys($repeating_forms_events[$this->event_id]));
@@ -207,7 +207,7 @@ class SummarizeInstance
                 // One or more of our summarized forms includes one or more repeating forms
                 if (count($this->all_forms) > 1) {
                     $this->errors[] = "If a form is repeating in an event, only fields from that single form can be summarized";
-                    $this->module->emDebug($this->all_forms, array_keys($repeating_forms_events[$this->event_id]), $non_repeating_forms, count($this->all_forms));
+                    //$this->module->emDebug($this->all_forms, array_keys($repeating_forms_events[$this->event_id]), $non_repeating_forms, count($this->all_forms));
                 }
             }
         }
@@ -240,7 +240,7 @@ class SummarizeInstance
 
         if (!empty($instrument) && !in_array($instrument, $this->all_forms)) {
             // This form is not part of summarize - lets skip
-            $this->module->emDebug("Skipping $instrument in event $this->event_id because it is not affected", $instrument, $this->all_forms);
+            //$this->module->emDebug("Skipping $instrument in event $this->event_id because it is not affected", $instrument, $this->all_forms);
             return false;
         }
 
@@ -250,7 +250,7 @@ class SummarizeInstance
         // Are we deleting a form on a repeating form page?
         if (@$deleteAction === "deleteForm" && $this->destination_form === @$instrument) {
             // do not save the new summary because this instance is being deleted
-            $this->module->emDebug("Skipping save - deleting instance of form $instrument");
+            //$this->module->emDebug("Skipping save - deleting instance of form $instrument");
             return false;
         }
 
@@ -299,7 +299,6 @@ class SummarizeInstance
                 }
             }
         }
-        $this->module->emLog("Instrument(s): " . implode(',', $this->all_forms) . " has the repeat value of " . $repeat . " for event ID " . $this->event_id);
 
         return $repeat;
     }
@@ -321,12 +320,12 @@ class SummarizeInstance
             if (($repeat === self::REPEAT_FORM) or ($repeat === self::REPEAT_EVENT)) {
                 foreach ($eventInfo[$this->event_id] as $formName => $formData) {
                     foreach ($formData[$repeat_instance] as $fieldname => $fieldValue) {
-                        if ($fieldValue !== '') {
+                        if ($fieldValue !== '' or $this->display_blanks) {
                             $thisField = $this->Proj->metadata[$fieldname];
                             $eachField = array();
                             $eachField["fieldLabel"] = $thisField["element_label"];
                             $eachField["value"] = $this->getLabel($thisField, $fieldValue);
-                            if ($eachField["value"] != '') {
+                            if ($eachField["value"] != '' or $this->display_blanks) {
                                 $fields[$fieldname] = $eachField;
                             }
                         }
@@ -336,12 +335,12 @@ class SummarizeInstance
 
                 // This is for non-repeating instances
                 foreach(array_keys($this->all_fields) as $fieldkey => $fieldname) {
-                    if ($eventInfo[$fieldname] !== '') {
+                    if ($eventInfo[$fieldname] !== '' or $this->display_blanks) {
                         $thisField = $this->Proj->metadata[$fieldname];
                         $eachField = array();
                         $eachField["fieldLabel"] = $thisField["element_label"];
                         $eachField["value"] = $this->getLabel($thisField, $eventInfo[$fieldname]);
-                        if ($eachField["value"] != '') {
+                        if ($eachField["value"] != '' or $this->display_blanks) {
                             $fields[$fieldname] = $eachField;
                         }
                     }
@@ -377,11 +376,11 @@ class SummarizeInstance
             $value_width = 100-$label_width;
         }
 
-        $html = "<div style='background-color: #fefefe; padding:5px;'>";
+        $html = "<div style='background-color: " . $this->prim_color . "; padding:5px;'>";
         if (!empty($this->title)) {
             $html .= "<h6 style='text-align:center'><b>$this->title</b></h6>";
         }
-        $html .= "<table style='border: 1px solid #fefefe; border-spacing:0px; width:100%;'>";
+        $html .= "<table style='border: 1px solid " . $this->prim_color . "; border-spacing:0px; width:100%;'>";
         if (empty($this->disp_value_under_name) || empty($label_width)) {
             $html .= "<tr><th style='width:" . $label_width . "%'></th><th style='width:" . $value_width . "%'></th></tr>";
         }
@@ -394,7 +393,8 @@ class SummarizeInstance
             $filteredText = REDCap::filterHtml($text);
             $filteredLabel = REDCap::filterHtml($label);
 
-            $color = ($odd ? '#fefefe' : '#fafafa');
+            //$color = ($odd ? '#fefefe' : '#fafafa');
+            $color = ($odd ? $this->prim_color : $this->sec_color);
 
             // Decide if this field value should be on a new line. If the length of the field value is longer than
             // the allowed length set in the configuration, display on a new line.
