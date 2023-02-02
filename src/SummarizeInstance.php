@@ -365,15 +365,15 @@ class SummarizeInstance
             // If the user does not want to display the values on a separate row from
             // the label, see what the field label width should be.
             if (empty($this->field_label_width)) {
-                $label_width = '';
+                $label_width = '';  // consider making this zero 0 instead of an empty string
             } else if ($this->field_label_width < self::MIN_LABEL_WIDTH) {
                 $label_width = self::MIN_LABEL_WIDTH;
             } else if ($this->field_label_width > self::MAX_LABEL_WIDTH) {
                 $label_width = self::MAX_LABEL_WIDTH;
             } else {
-                $label_width = $this->field_label_width;
+                $label_width = $this->field_label_width;  // also this may need a typecast (int)
             }
-            $value_width = 100-$label_width;
+            $value_width = 100 - (int)$label_width;  // for PHP 8 we need the typecast because an empty string is no longer promoted to be a zero 0, in PHP 8 it throws an exception.
         }
 
         $html = "<div style='background-color: " . $this->prim_color . "; padding:5px;'>";
@@ -381,7 +381,7 @@ class SummarizeInstance
             $html .= "<h6 style='text-align:center'><b>$this->title</b></h6>";
         }
         $html .= "<table style='border: 1px solid " . $this->prim_color . "; border-spacing:0px; width:100%;'>";
-        if (empty($this->disp_value_under_name) || empty($label_width)) {
+        if (empty($this->disp_value_under_name) || empty($label_width)) {  // with change of zero above empty($label_width) might be best to be ($label_width == 0) instead
             $html .= "<tr><th style='width:" . $label_width . "%'></th><th style='width:" . $value_width . "%'></th></tr>";
         }
 
