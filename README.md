@@ -33,6 +33,9 @@ There are a number of options to help streamline the rendering and display of th
 1. If the source form is repeating, then the destination field must be in the same form.
 1. If the source forms/fields are in a repeating event, the destination field must be in that repeating event.
 
+## Latest Changes
+[02-06-2023] Added Framework 10, fixed exception when field label is blank
+
 ## Future Enhancements
 1. Width Options: Auto, 1:2, 2:1?
 1. Include section headers

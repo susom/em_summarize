@@ -26,6 +26,8 @@
     "redcap_every_page_before_render"
   ],
 
+  "framework-version": 10,
+
   "links": {
     "control-center": [
     ],

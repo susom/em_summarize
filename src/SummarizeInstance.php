@@ -365,13 +365,13 @@ class SummarizeInstance
             // If the user does not want to display the values on a separate row from
             // the label, see what the field label width should be.
             if (empty($this->field_label_width)) {
-                $label_width = '';
+                $label_width = 0;
             } else if ($this->field_label_width < self::MIN_LABEL_WIDTH) {
-                $label_width = self::MIN_LABEL_WIDTH;
+                $label_width = (int)self::MIN_LABEL_WIDTH;
             } else if ($this->field_label_width > self::MAX_LABEL_WIDTH) {
-                $label_width = self::MAX_LABEL_WIDTH;
+                $label_width = (int)self::MAX_LABEL_WIDTH;
             } else {
-                $label_width = $this->field_label_width;
+                $label_width = (int)$this->field_label_width;
             }
             $value_width = 100-$label_width;
         }
@@ -381,7 +381,7 @@ class SummarizeInstance
             $html .= "<h6 style='text-align:center'><b>$this->title</b></h6>";
         }
         $html .= "<table style='border: 1px solid " . $this->prim_color . "; border-spacing:0px; width:100%;'>";
-        if (empty($this->disp_value_under_name) || empty($label_width)) {
+        if (empty($this->disp_value_under_name) || ($label_width == 0)) {
             $html .= "<tr><th style='width:" . $label_width . "%'></th><th style='width:" . $value_width . "%'></th></tr>";
         }
 
