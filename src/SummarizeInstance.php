@@ -97,7 +97,7 @@ class SummarizeInstance
         foreach ($this->include_forms as $form_name) {
             // A key value array of fields name and field label
             $form_fields = $this->Proj->forms[$form_name]['fields'];
-            $all_fields = array_merge($all_fields, $form_fields);
+            $all_fields = array_merge($all_fields??[], $form_fields??[]);
             if ($this->remove_form_status) {
                 unset($all_fields[$form_name . "_complete"]);
             }
