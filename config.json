@@ -4,18 +4,13 @@
   "description": "Create nice, html summaries from forms or fields in a project.  You can then pipe this summary in forms, surveys, emails or anywhere else in REDCap.",
   "authors": [
     {
-      "name": "Andy Martin",
-      "email": "andy123@stanford.edu",
+      "name": "Jordan Schultz",
+      "email": "jmschult@stanford.edu",
       "institution": "Stanford University"
     },
     {
-      "name": "Jae Lee",
-      "email": "jael@stanford.edu",
-      "institution": "Stanford University"
-    },
-    {
-      "name": "Lee Ann Yasukawa",
-      "email": "yasukawa@stanford.edu",
+      "name": "Ihab Zeedia",
+      "email": "ihabz@stanford.edu",
       "institution": "Stanford University"
     }
   ],
