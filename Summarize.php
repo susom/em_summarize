@@ -14,11 +14,11 @@ class Summarize extends \ExternalModules\AbstractExternalModule
 
     private $subSettings;   // An array of subsettings under the instance key
     private $deleteAction = null;
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
+//
+//    public function __construct()
+//    {
+//        parent::__construct();
+//    }
 
     // Converts an array of key => array[values(0..n)] into an array of [i] => [key] => value where i goes from 0..n
     // For example:
