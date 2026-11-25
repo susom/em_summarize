@@ -197,8 +197,8 @@ class Summarize extends \ExternalModules\AbstractExternalModule
         if (@$_POST['submit-action'] === 'submit-btn-deleteform') {
             $this->deleteAction = 'deleteForm';
         }
-       $this->emLog(PAGE, $_POST, $_GET);
-
+        // Do not log $_POST/$_GET here: this hook runs on every page, so a form or survey save
+        // would send every submitted field value (PHI) to em_logger.
    }
 
     /**
